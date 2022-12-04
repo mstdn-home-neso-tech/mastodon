@@ -21,7 +21,11 @@ module Mastodon
     end
 
     def suffix
-      ''
+      '-mhnt'
+    end
+
+    def revision
+      '.2'
     end
 
     def to_a
@@ -29,11 +33,11 @@ module Mastodon
     end
 
     def to_s
-      [to_a.join('.'), flags, suffix].join
+      [to_a.join('.'), flags, suffix, revision].join
     end
 
     def repository
-      ENV.fetch('GITHUB_REPOSITORY', 'mastodon/mastodon')
+      ENV.fetch('GITHUB_REPOSITORY', 'mstdn-home-neso-tech/mastodon')
     end
 
     def source_base_url
