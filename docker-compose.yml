@@ -29,7 +29,7 @@ services:
     restart: always
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
     environment:
-      - "ES_JAVA_OPTS=-Xms1G -Xmx4G -Des.enforce.bootstrap.checks=true"
+      - "ES_JAVA_OPTS=-Xms2G -Xmx2G -Des.enforce.bootstrap.checks=true"
       - "xpack.license.self_generated.type=basic"
       - "xpack.security.enabled=false"
       - "xpack.watcher.enabled=false"
