@@ -38,7 +38,7 @@ RSpec.describe StatusPin, type: :model do
       expect(StatusPin.new(account: account, status: status).save).to be false
     end
 
-    max_pins = 5
+    max_pins = 10
     it 'does not allow pins above the max' do
       account = Fabricate(:account)
       status = []
