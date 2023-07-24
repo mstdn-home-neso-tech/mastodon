@@ -21,11 +21,11 @@ module Mastodon
     end
 
     def suffix
-      '-mhnt'
+      '-nesotech'
     end
 
     def revision
-      '.6'
+      '.2'
     end
 
     def to_a
