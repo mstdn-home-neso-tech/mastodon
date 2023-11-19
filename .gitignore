@@ -66,3 +66,6 @@ docker-compose.override.yml
 
 # Ignore local nginx config file
 dist/mstdn.home.neso.tech.conf*
+.env.production*
+.env.production*
+dump*
