@@ -9,11 +9,11 @@ module Mastodon
     end
 
     def minor
-      0
+      1
     end
 
     def patch
-      2
+      6
     end
 
     def flags
@@ -21,11 +21,11 @@ module Mastodon
     end
 
     def suffix
-      '-mhnt'
+      '-nesotech'
     end
 
     def revision
-      '.6'
+      '.1'
     end
 
     def to_a
