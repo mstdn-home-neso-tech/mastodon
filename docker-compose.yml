@@ -1,13 +1,27 @@
 version: '3'
 services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    ports:
+      - 30000:30000
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/caddy_data:/data
+      - ./caddy/caddy_config:/config
+      - ./public/system:/mastodon/public/system
+    networks:
+      - internal_network
+      - external_network
   db:
     restart: always
-    image: postgres:14-alpine
+    image: postgres:14
     shm_size: 256mb
     networks:
       - internal_network
     healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'mastodon', '-D', 'mastodon_production']
+      test: ['CMD', 'pg_isready', '-U', 'mastodon', '-d', 'mastodon_production']
     volumes:
       - ./postgres14:/var/lib/postgresql/data
     environment:
@@ -29,7 +43,7 @@ services:
     restart: always
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.4
     environment:
-      - "ES_JAVA_OPTS=-Xms2G -Xmx2G -Des.enforce.bootstrap.checks=true"
+      - "ES_JAVA_OPTS=-Xms2G -Xmx8G -Des.enforce.bootstrap.checks=true"
       - "xpack.license.self_generated.type=basic"
       - "xpack.security.enabled=false"
       - "xpack.watcher.enabled=false"
@@ -54,8 +68,8 @@ services:
         soft: 65536
         hard: 65536
     ports:
-      - '127.0.0.1:9200:9200'
-
+      # - '127.0.0.1:9200:9200'
+      - 9200:9200
   web:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
     restart: always
@@ -68,11 +82,13 @@ services:
       # prettier-ignore
       test: ['CMD-SHELL', 'wget -q --spider --proxy=off localhost:3000/health || exit 1']
     ports:
-      - '127.0.0.1:3000:3000'
+      # - '127.0.0.1:3000:3000'
+      - 3000:3000
     depends_on:
       - db
       - redis
       - es
+      - caddy
     volumes:
       - ./public/system:/mastodon/public/system
 
@@ -98,8 +114,8 @@ services:
     restart: always
     env_file: .env.production
     environment:
-      - DB_POOL=30
-    command: bundle exec sidekiq -c 30
+      - DB_POOL=50
+    command: bundle exec sidekiq -c 50
     depends_on:
       - db
       - redis

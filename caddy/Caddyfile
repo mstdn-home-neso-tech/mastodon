@@ -1,0 +1,111 @@
+# Caddyfile
+:30000 {
+# https://mstdn.home.neso.tech { # mstnd.home.neso.tech
+	@local {
+		file
+		not path /
+	}
+	@local_media {
+		path_regexp ^/system/(.*)
+	}
+	@streaming {
+		path /api/v1/streaming/*
+	}
+	@cache_control {
+		path_regexp ^/(emoji|packs|/system/accounts/avatars|/system/media_attachments/files)
+	}
+
+	root * /mastodon/live/public
+	log {
+		output file /var/log/caddy/mstdn.home.neso.tech.port3000.log {
+			roll_size 10mb
+			roll_keep 20
+			roll_keep_for 720h
+		}
+	}
+
+	encode zstd gzip
+
+	handle_errors {
+		rewrite 500.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+	}
+	header /sw.js Cache-Control "public, max-age=0"
+	header @cache_control Cache-Control "public, max-age=31536000, immutable"
+
+	handle @local {
+		file_server
+	}
+
+	## If you've been migrated media from local to object storage, this navigate old URL to new one.
+	# redir @local_media https://yourobjectstorage.example.com/{http.regexp.1} permanent
+
+	reverse_proxy @streaming {
+		# to http://localhost:4000
+        to http://streaming:4000
+		transport http {
+			keepalive 5s
+			keepalive_idle_conns 10
+		}
+	}
+
+	reverse_proxy {
+		# to http://localhost:3000
+        to http://web:3000
+
+		header_up X-Forwarded-Port 443
+		header_up X-Forwarded-Proto https
+
+		transport http {
+			keepalive 5s
+			keepalive_idle_conns 10
+		}
+	}
+}
+
+# https://epg.home.neso.tech {
+# 	reverse_proxy {
+# 		to http://localhost:8888
+# #		header_up X-Forwarded-Port 443
+# 		header_up X-Forwarded-Proto $scheme
+# 	}
+# 	@denied not remote_ip 192.168.3.0/24 2400:2652:222:da00::/64
+# 	handle @denied {
+# 		basicauth / {
+# 			neso $2a$14$xDseFN0xPBIiFerQ95fLkezjz/p6smEmgmKlmI.ex.0GEAJ.vncpG
+# 		}
+# 	}
+# 	log {
+# 		output file /var/log/caddy/epg.home.neso.tech.log {
+# 			roll_size 10mb
+# 			roll_keep 20
+# 			roll_keep_for 720h
+# 		}
+# 	}
+# }
+
+# https://drive.home.neso.tech {
+# 	root * /var/www/nextcloud # Nextcloud
+
+# 	handle /robots.txt {
+# 		skip_log
+# 	}
+
+# 	#       @DavClient `{>User-Agent}.startsWith("DavClnt")`
+# 	#    handle @DavClient {
+# 	#        redir / /remote.php/webdav/{is_args}{args} 302
+# 	#    }
+# }
+
+# http://craft.home.neso.tech {
+# 	handle /dynmap {
+# 		reverse_proxy http://localhost:8123
+# 	}
+# 	handle / {
+# 		root * /var/www/craft.home.neso.tech
+# 	}
+# }
