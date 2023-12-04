@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     /home
     /public
     /public/local
+    /public/remote
     /conversations
     /lists/(*any)
     /notifications
@@ -29,6 +30,7 @@ Rails.application.routes.draw do
     /mutes
     /followed_tags
     /statuses/(*any)
+    /deck/(*any)
   ).freeze
 
   root 'home#index'
@@ -52,12 +54,15 @@ Rails.application.routes.draw do
   get '.well-known/nodeinfo', to: 'well_known/nodeinfo#index', as: :nodeinfo, defaults: { format: 'json' }
   get '.well-known/webfinger', to: 'well_known/webfinger#show', as: :webfinger
   get '.well-known/change-password', to: redirect('/auth/edit')
+  get '.well-known/proxy', to: redirect { |_, request| "/authorize_interaction?#{request.params.to_query}" }
 
   get '/nodeinfo/2.0', to: 'well_known/nodeinfo#show', as: :nodeinfo_schema
 
   get 'manifest', to: 'manifests#show', defaults: { format: 'json' }
   get 'intent', to: 'intents#show'
   get 'custom.css', to: 'custom_css#show', as: :custom_css
+
+  get 'remote_interaction_helper', to: 'remote_interaction_helper#index'
 
   resource :instance_actor, path: 'actor', only: [:show] do
     resource :inbox, only: [:create], module: :activitypub
@@ -67,10 +72,13 @@ Rails.application.routes.draw do
   devise_scope :user do
     get '/invite/:invite_code', to: 'auth/registrations#new', as: :public_invite
 
+    resource :unsubscribe, only: [:show, :create], controller: :mail_subscriptions
+
     namespace :auth do
       resource :setup, only: [:show, :update], controller: :setup
       resource :challenge, only: [:create], controller: :challenges
       get 'sessions/security_key_options', to: 'sessions#webauthn_options'
+      post 'captcha_confirmation', to: 'confirmations#confirm_captcha', as: :captcha_confirmation
     end
   end
 
@@ -83,6 +91,8 @@ Rails.application.routes.draw do
   }
 
   get '/users/:username', to: redirect('/@%{username}'), constraints: lambda { |req| req.format.nil? || req.format.html? }
+  get '/users/:username/following', to: redirect('/@%{username}/following'), constraints: lambda { |req| req.format.nil? || req.format.html? }
+  get '/users/:username/followers', to: redirect('/@%{username}/followers'), constraints: lambda { |req| req.format.nil? || req.format.html? }
   get '/users/:username/statuses/:id', to: redirect('/@%{username}/%{id}'), constraints: lambda { |req| req.format.nil? || req.format.html? }
   get '/authorize_follow', to: redirect { |_, request| "/authorize_interaction?#{request.params.to_query}" }
 
@@ -98,8 +108,6 @@ Rails.application.routes.draw do
 
     resources :followers, only: [:index], controller: :follower_accounts
     resources :following, only: [:index], controller: :following_accounts
-    resource :follow, only: [:create], controller: :account_follow
-    resource :unfollow, only: [:create], controller: :account_unfollow
 
     resource :outbox, only: [:show], module: :activitypub
     resource :inbox, only: [:create], module: :activitypub
@@ -112,88 +120,28 @@ Rails.application.routes.draw do
 
   get '/:encoded_at(*path)', to: redirect("/@%{path}"), constraints: { encoded_at: /%40/ }
 
+<<<<<<< HEAD
   constraints(username: /[^@\/.]+/) do
+=======
+  constraints(username: %r{[^@/.]+}) do
+>>>>>>> v4.2.1
     get '/@:username', to: 'accounts#show', as: :short_account
     get '/@:username/with_replies', to: 'accounts#show', as: :short_account_with_replies
     get '/@:username/media', to: 'accounts#show', as: :short_account_media
     get '/@:username/tagged/:tag', to: 'accounts#show', as: :short_account_tag
   end
 
-  constraints(account_username: /[^@\/.]+/) do
+  constraints(account_username: %r{[^@/.]+}) do
     get '/@:account_username/following', to: 'following_accounts#index'
     get '/@:account_username/followers', to: 'follower_accounts#index'
     get '/@:account_username/:id', to: 'statuses#show', as: :short_account_status
     get '/@:account_username/:id/embed', to: 'statuses#embed', as: :embed_short_account_status
   end
 
-  get '/@:username_with_domain/(*any)', to: 'home#index', constraints: { username_with_domain: /([^\/])+?/ }, format: false
+  get '/@:username_with_domain/(*any)', to: 'home#index', constraints: { username_with_domain: %r{([^/])+?} }, format: false
   get '/settings', to: redirect('/settings/profile')
 
-  namespace :settings do
-    resource :profile, only: [:show, :update] do
-      resources :pictures, only: :destroy
-    end
-
-    get :preferences, to: redirect('/settings/preferences/appearance')
-
-    namespace :preferences do
-      resource :appearance, only: [:show, :update], controller: :appearance
-      resource :notifications, only: [:show, :update]
-      resource :other, only: [:show, :update], controller: :other
-    end
-
-    resource :import, only: [:show, :create]
-    resource :export, only: [:show, :create]
-
-    namespace :exports, constraints: { format: :csv } do
-      resources :follows, only: :index, controller: :following_accounts
-      resources :blocks, only: :index, controller: :blocked_accounts
-      resources :mutes, only: :index, controller: :muted_accounts
-      resources :lists, only: :index, controller: :lists
-      resources :domain_blocks, only: :index, controller: :blocked_domains
-      resources :bookmarks, only: :index, controller: :bookmarks
-    end
-
-    resources :two_factor_authentication_methods, only: [:index] do
-      collection do
-        post :disable
-      end
-    end
-
-    resource :otp_authentication, only: [:show, :create], controller: 'two_factor_authentication/otp_authentication'
-
-    resources :webauthn_credentials, only: [:index, :new, :create, :destroy],
-              path: 'security_keys',
-              controller: 'two_factor_authentication/webauthn_credentials' do
-
-      collection do
-        get :options
-      end
-    end
-
-    namespace :two_factor_authentication do
-      resources :recovery_codes, only: [:create]
-      resource :confirmation, only: [:new, :create]
-    end
-
-    resources :applications, except: [:edit] do
-      member do
-        post :regenerate
-      end
-    end
-
-    resource :delete, only: [:show, :destroy]
-    resource :migration, only: [:show, :create]
-
-    namespace :migration do
-      resource :redirect, only: [:new, :create, :destroy]
-    end
-
-    resources :aliases, only: [:index, :create, :destroy]
-    resources :sessions, only: [:destroy]
-    resources :featured_tags, only: [:index, :create, :destroy]
-    resources :login_activities, only: [:index]
-  end
+  draw(:settings)
 
   namespace :disputes do
     resources :strikes, only: [:show, :index] do
@@ -222,9 +170,10 @@ Rails.application.routes.draw do
   get '/media_proxy/:id/(*any)', to: 'media_proxy#show', as: :media_proxy, format: false
   get '/backups/:id/download', to: 'backups#download', as: :download_backup, format: false
 
-  resource :authorize_interaction, only: [:show, :create]
-  resource :share, only: [:show, :create]
+  resource :authorize_interaction, only: [:show]
+  resource :share, only: [:show]
 
+<<<<<<< HEAD
   namespace :admin do
     get '/dashboard', to: 'dashboard#index'
 
@@ -707,6 +656,13 @@ Rails.application.routes.draw do
       end
     end
   end
+=======
+  draw(:admin)
+
+  get '/admin', to: redirect('/admin/dashboard', status: 302)
+
+  draw(:api)
+>>>>>>> v4.2.1
 
   web_app_paths.each do |path|
     get path, to: 'home#index'

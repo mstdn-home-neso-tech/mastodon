@@ -9,23 +9,36 @@ module Mastodon
     end
 
     def minor
-      1
+      2
     end
 
     def patch
+<<<<<<< HEAD
       6
+=======
+      1
+>>>>>>> v4.2.1
     end
 
-    def flags
+    def default_prerelease
       ''
     end
 
+<<<<<<< HEAD
     def suffix
       '-nesotech'
     end
 
     def revision
       '.1'
+=======
+    def prerelease
+      ENV['MASTODON_VERSION_PRERELEASE'].presence || default_prerelease
+    end
+
+    def build_metadata
+      ENV.fetch('MASTODON_VERSION_METADATA', nil)
+>>>>>>> v4.2.1
     end
 
     def to_a
@@ -33,7 +46,18 @@ module Mastodon
     end
 
     def to_s
+<<<<<<< HEAD
       [to_a.join('.'), flags, suffix, revision].join
+=======
+      components = [to_a.join('.')]
+      components << "-#{prerelease}" if prerelease.present?
+      components << "+#{build_metadata}" if build_metadata.present?
+      components.join
+    end
+
+    def gem_version
+      @gem_version ||= Gem::Version.new(to_s.split('+')[0])
+>>>>>>> v4.2.1
     end
 
     def repository

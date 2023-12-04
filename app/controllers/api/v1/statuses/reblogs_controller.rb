@@ -12,7 +12,11 @@ class Api::V1::Statuses::ReblogsController < Api::BaseController
   override_rate_limit_headers :create, family: :statuses
 
   def create
+<<<<<<< HEAD
     with_lock("reblog:#{current_account.id}:#{@reblog.id}") do
+=======
+    with_redis_lock("reblog:#{current_account.id}:#{@reblog.id}") do
+>>>>>>> v4.2.1
       @status = ReblogService.new.call(current_account, @reblog, reblog_params)
     end
 
@@ -24,15 +28,18 @@ class Api::V1::Statuses::ReblogsController < Api::BaseController
 
     if @status
       authorize @status, :unreblog?
+      @reblog = @status.reblog
+      count = [@reblog.reblogs_count - 1, 0].max
       @status.discard
       RemovalWorker.perform_async(@status.id)
-      @reblog = @status.reblog
     else
       @reblog = Status.find(params[:status_id])
+      count = @reblog.reblogs_count
       authorize @reblog, :show?
     end
 
-    render json: @reblog, serializer: REST::StatusSerializer, relationships: StatusRelationshipsPresenter.new([@status], current_account.id, reblogs_map: { @reblog.id => false })
+    relationships = StatusRelationshipsPresenter.new([@status], current_account.id, reblogs_map: { @reblog.id => false }, attributes_map: { @reblog.id => { reblogs_count: count } })
+    render json: @reblog, serializer: REST::StatusSerializer, relationships: relationships
   rescue Mastodon::NotPermittedError
     not_found
   end

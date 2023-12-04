@@ -2,6 +2,10 @@
 
 class Admin::SystemCheck
   ACTIVE_CHECKS = [
+<<<<<<< HEAD
+=======
+    Admin::SystemCheck::SoftwareVersionCheck,
+>>>>>>> v4.2.1
     Admin::SystemCheck::MediaPrivacyCheck,
     Admin::SystemCheck::DatabaseSchemaCheck,
     Admin::SystemCheck::SidekiqProcessCheck,

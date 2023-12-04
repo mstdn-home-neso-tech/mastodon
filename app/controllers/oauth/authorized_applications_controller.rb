@@ -7,6 +7,9 @@ class Oauth::AuthorizedApplicationsController < Doorkeeper::AuthorizedApplicatio
   before_action :authenticate_resource_owner!
   before_action :require_not_suspended!, only: :destroy
   before_action :set_body_classes
+  before_action :set_cache_headers
+
+  before_action :set_last_used_at_by_app, only: :index, unless: -> { request.format == :json }
 
   before_action :set_last_used_at_by_app, only: :index, unless: -> { request.format == :json }
 
@@ -33,6 +36,13 @@ class Oauth::AuthorizedApplicationsController < Doorkeeper::AuthorizedApplicatio
     forbidden if current_account.suspended?
   end
 
+<<<<<<< HEAD
+=======
+  def set_cache_headers
+    response.cache_control.replace(private: true, no_store: true)
+  end
+
+>>>>>>> v4.2.1
   def set_last_used_at_by_app
     @last_used_at_by_app = Doorkeeper::AccessToken
                            .select('DISTINCT ON (application_id) application_id, last_used_at')
