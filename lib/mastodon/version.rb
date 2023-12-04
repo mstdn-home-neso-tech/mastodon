@@ -9,14 +9,14 @@ module Mastodon
     end
 
     def minor
-      1
+      2
     end
 
     def patch
-      6
+      2
     end
 
-    def flags
+    def default_prerelease
       ''
     end
 
@@ -33,7 +33,14 @@ module Mastodon
     end
 
     def to_s
-      [to_a.join('.'), flags, suffix, revision].join
+      components = [to_a.join('.')]
+      components << "-#{prerelease}" if prerelease.present?
+      components << "+#{build_metadata}" if build_metadata.present?
+      components.join
+    end
+
+    def gem_version
+      @gem_version ||= Gem::Version.new(to_s.split('+')[0])
     end
 
     def repository
