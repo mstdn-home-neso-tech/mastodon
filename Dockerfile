@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 FROM ruby:3.0-bullseye
 
 # Install Node.js
@@ -6,26 +5,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-=======
-# syntax=docker/dockerfile:1.4
-# This needs to be bookworm-slim because the Ruby image is built on bookworm-slim
-ARG NODE_VERSION="20.6-bookworm-slim"
-
-FROM ghcr.io/moritzheiber/ruby-jemalloc:3.2.2-slim as ruby
-FROM node:${NODE_VERSION} as build
-
-COPY --link --from=ruby /opt/ruby /opt/ruby
-
-ENV DEBIAN_FRONTEND="noninteractive" \
-    PATH="${PATH}:/opt/ruby/bin"
->>>>>>> v4.2.1
 
 # Create the mastodon user
 ARG UID=991
 ARG GID=991
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && \
-<<<<<<< HEAD
     echo "Etc/UTC" > /etc/localtime && \
     apt-get install -y --no-install-recommends whois wget && \
     addgroup --gid $GID mastodon && \
@@ -59,49 +44,21 @@ RUN npm install -g npm@latest && \
     apt-get update && \
     apt-get install -y --no-install-recommends && \
     cd /opt/mastodon && \
-=======
-    apt-get -yq dist-upgrade && \
-    apt-get install -y --no-install-recommends build-essential \
-        git \
-        libicu-dev \
-        libidn-dev \
-        libpq-dev \
-        libjemalloc-dev \
-        zlib1g-dev \
-        libgdbm-dev \
-        libgmp-dev \
-        libssl-dev \
-        libyaml-0-2 \
-        ca-certificates \
-        libreadline8 \
-        python3 \
-        shared-mime-info && \
->>>>>>> v4.2.1
     bundle config set --local deployment 'true' && \
     bundle config set --local without 'development test' && \
     bundle config set silence_root_warning true && \
     bundle install -j"$(nproc)" && \
-<<<<<<< HEAD
     yarn install --pure-lockfile && \
     chown -R mastodon:mastodon /opt/mastodon && \
     npm cache clean --force && \
     yarn cache clean && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-=======
-    yarn install --pure-lockfile --production --network-timeout 600000 && \
-    yarn cache clean
->>>>>>> v4.2.1
 
 # Run mastodon services in prod mode
 ENV RAILS_ENV="production"
 ENV NODE_ENV="production"
 
-<<<<<<< HEAD
-# Tell rails to serve static files
-ENV RAILS_SERVE_STATIC_FILES="true"
-ENV BIND="0.0.0.0"
-=======
 # Use those args to specify your own version flags & suffixes
 ARG MASTODON_VERSION_PRERELEASE=""
 ARG MASTODON_VERSION_METADATA=""
@@ -152,19 +109,12 @@ ENV RAILS_ENV="production" \
     BIND="0.0.0.0" \
     MASTODON_VERSION_PRERELEASE="${MASTODON_VERSION_PRERELEASE}" \
     MASTODON_VERSION_METADATA="${MASTODON_VERSION_METADATA}"
->>>>>>> v4.2.1
 
 # Set the run user
 USER mastodon
 
 # Precompile assets
-<<<<<<< HEAD
-RUN cd ~ && \
-    OTP_SECRET=precompile_placeholder SECRET_KEY_BASE=precompile_placeholder bundle exec rails assets:precompile && \
-    yarn cache clean
-=======
 RUN OTP_SECRET=precompile_placeholder SECRET_KEY_BASE=precompile_placeholder rails assets:precompile
->>>>>>> v4.2.1
 
 # Set the work dir and the container entry point
 WORKDIR /opt/mastodon
