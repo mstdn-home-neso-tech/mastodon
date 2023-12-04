@@ -1,4 +1,4 @@
-name: Build container image
+name: Build container image (nesotech)
 on:
   workflow_dispatch:
   push:
@@ -9,7 +9,7 @@ on:
       - '*'
   pull_request:
     paths:
-      - .github/workflows/build-image.yml
+      - .github/workflows/build-nesotech.yml
       - Dockerfile
 permissions:
   contents: read
