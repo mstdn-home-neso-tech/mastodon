@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.5-nesotech] - 2024-02-04
+
+### v4.2.5からの改造点
+
+- app\models\media_attachment.rb
+毎回ビットレート計算するのダルいから，ぜんぶ感度2倍にしてる．
+- lib\mastodon\version.rb
+  `v4.2.5-nesotech.1`
+
 ## [4.2.5] - 2024-02-01
 
 ### Security
@@ -287,11 +296,13 @@ The following changelog entries focus on changes visible to users, administrator
 - Change sidekiq-bulk's batch size from 10,000 to 1,000 jobs in one Redis call ([ClearlyClaire](https://github.com/mastodon/mastodon/pull/24034))
 - Change translation to only be offered for supported languages ([c960657](https://github.com/mastodon/mastodon/pull/23879), [c960657](https://github.com/mastodon/mastodon/pull/24037))
   This adds the `/api/v1/instance/translation_languages` REST API endpoint that returns an object with the supported translation language pairs in the form:
+
   ```json
   {
     "fr": ["en", "de"]
   }
   ```
+
   (where `fr` is a supported source language and `en` and `de` or supported output language when translating a `fr` string)
 - Change compose form checkbox to native input with `appearance: none` ([ClearlyClaire](https://github.com/mastodon/mastodon/pull/22949))
 - Change posts' clickable area to be larger ([c960657](https://github.com/mastodon/mastodon/pull/23621))
