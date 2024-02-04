@@ -40,11 +40,20 @@ class MediaAttachment < ApplicationRecord
   MAX_DESCRIPTION_LENGTH = 1_500
 
   IMAGE_LIMIT = 40.megabytes
-  VIDEO_LIMIT = 160.megabytes
+  VIDEO_LIMIT = 200.megabytes
 
-  MAX_VIDEO_MATRIX_LIMIT = 8_294_400 # 3840x2160px
+  MAX_VIDEO_MATRIX_LIMIT = 3840*2160 # 3840x2160px
   MAX_VIDEO_FRAME_RATE   = 120
   MAX_VIDEO_FRAMES       = 36_000 # Approx. 5 minutes at 120 fps
+
+  ## 自鯖用カスタム
+  CUSTOM_COEFFICIENT = 2
+  IMAGE_LIMIT = IMAGE_LIMIT * CUSTOM_COEFFICIENT
+  VIDEO_LIMIT = VIDEO_LIMIT * CUSTOM_COEFFICIENT
+  MAX_VIDEO_MATRIX_LIMIT = MAX_VIDEO_MATRIX_LIMIT * CUSTOM_COEFFICIENT * CUSTOM_COEFFICIENT
+  MAX_VIDEO_FRAME_RATE  = MAX_VIDEO_FRAME_RATE * CUSTOM_COEFFICIENT
+  MAX_VIDEO_FRAMES = MAX_VIDEO_FRAMES * CUSTOM_COEFFICIENT
+  ## カスタムここまで
 
   IMAGE_FILE_EXTENSIONS = %w(.jpg .jpeg .png .gif .webp .heic .heif .avif).freeze
   VIDEO_FILE_EXTENSIONS = %w(.webm .mp4 .m4v .mov).freeze
@@ -70,7 +79,7 @@ class MediaAttachment < ApplicationRecord
 
   IMAGE_STYLES = {
     original: {
-      pixels: 8_294_400, # 3840x2160px
+      pixels: MAX_VIDEO_MATRIX_LIMIT, # 3840x2160px
       file_geometry_parser: FastGeometryParser,
     }.freeze,
 
