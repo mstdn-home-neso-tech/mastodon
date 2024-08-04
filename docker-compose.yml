@@ -71,7 +71,12 @@ services:
       # - '127.0.0.1:9200:9200'
       - 9200:9200
   web:
+<<<<<<< HEAD
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
+=======
+    build: .
+    image: ghcr.io/mastodon/mastodon:v4.2.10
+>>>>>>> a5b4a2b7e71aedd2f04bc7a90f79dfe234fa7f89
     restart: always
     env_file: .env.production
     command: bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000"
@@ -93,7 +98,12 @@ services:
       - ./public/system:/mastodon/public/system
 
   streaming:
+<<<<<<< HEAD
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
+=======
+    build: .
+    image: ghcr.io/mastodon/mastodon:v4.2.10
+>>>>>>> a5b4a2b7e71aedd2f04bc7a90f79dfe234fa7f89
     restart: always
     env_file: .env.production
     command: node ./streaming
@@ -110,7 +120,12 @@ services:
       - redis
 
   sidekiq:
+<<<<<<< HEAD
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
+=======
+    build: .
+    image: ghcr.io/mastodon/mastodon:v4.2.10
+>>>>>>> a5b4a2b7e71aedd2f04bc7a90f79dfe234fa7f89
     restart: always
     env_file: .env.production
     environment:
