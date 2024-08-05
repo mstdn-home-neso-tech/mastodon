@@ -396,6 +396,9 @@ RUN \
 # Set Mastodon user as owner of tmp folder
   chown -R mastodon:mastodon /opt/mastodon/tmp;
 
+# Proxmox のDocker on LXC 用の対応
+RUN chown -R mastodon:mastodon /opt/mastodon
+
 # Set the running user for resulting container
 USER mastodon
 # Expose default Puma ports
