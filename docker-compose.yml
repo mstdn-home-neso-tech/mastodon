@@ -1,4 +1,6 @@
-version: '3'
+# This file is designed for production server deployment, not local development work
+# For a containerized local dev environment, see: https://github.com/mastodon/mastodon/blob/main/README.md#docker
+
 services:
   caddy:
     image: caddy:latest
@@ -74,7 +76,7 @@ services:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
     restart: always
     env_file: .env.production
-    command: bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000"
+    command: bundle exec puma -C config/puma.rb
     networks:
       - external_network
       - internal_network
@@ -128,7 +130,7 @@ services:
       test: ['CMD-SHELL', "ps aux | grep '[s]idekiq\ 6' || false"]
 
   ## Uncomment to enable federation with tor instances along with adding the following ENV variables
-  ## http_proxy=http://privoxy:8118
+  ## http_hidden_proxy=http://privoxy:8118
   ## ALLOW_ACCESS_TO_HIDDEN_SERVICE=true
   # tor:
   #   image: sirboops/tor
