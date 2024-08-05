@@ -33,6 +33,18 @@ Click below to **learn more** in a video:
 
 [patreon]: https://www.patreon.com/mastodon
 
+## 本家からの改変点
+
+- 投稿文字数の上限: 5000文字
+  - `MAX_CHARS = 5000`
+  - app/javascript/mastodon/features/compose/components/compose_form.js
+  - app/validators/status_length_validator.rb
+- 投稿画像の上限:
+  - 本家と同様
+- 固定ポストの数: 10
+  - `PIN_LIMIT = 10`
+  - app\validators\status_pin_validator.rb
+
 ## Features
 
 <img src="/app/javascript/images/elephant_ui_working.svg?raw=true" align="right" width="30%" />

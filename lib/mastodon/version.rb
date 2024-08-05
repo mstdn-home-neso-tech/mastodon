@@ -17,15 +17,7 @@ module Mastodon
     end
 
     def default_prerelease
-      'alpha.5'
-    end
-
-    def suffix
-      '-nesotech'
-    end
-
-    def revision
-      1
+      'alpha.5-nesotech-20240805'
     end
 
     def to_a
