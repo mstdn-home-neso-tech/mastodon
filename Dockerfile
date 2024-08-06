@@ -123,10 +123,10 @@ FROM ruby AS build
 
 # Copy Node package configuration files into working directory
 COPY package.json yarn.lock .yarnrc.yml /opt/mastodon/
-COPY .yarn /opt/mastodon/.yarn
+COPY .yarn/ /opt/mastodon/.yarn/
 
-COPY --from=node /usr/local/bin /usr/local/bin
-COPY --from=node /usr/local/lib /usr/local/lib
+COPY --from=node /usr/local/bin/ /usr/local/bin/
+COPY --from=node /usr/local/lib/ /usr/local/lib/
 
 ARG TARGETPLATFORM
 
@@ -278,7 +278,7 @@ ARG TARGETPLATFORM
 # Copy Node package configuration files into working directory
 COPY package.json yarn.lock .yarnrc.yml /opt/mastodon/
 COPY streaming/package.json /opt/mastodon/streaming/
-COPY .yarn /opt/mastodon/.yarn
+COPY .yarn/ /opt/mastodon/.yarn/
 
 # hadolint ignore=DL3008
 RUN \
@@ -294,12 +294,12 @@ FROM build AS precompiler
 COPY . /opt/mastodon/
 
 # Copy bundler and node packages from build layer to container
-COPY --from=yarn /opt/mastodon /opt/mastodon/
-COPY --from=bundler /opt/mastodon /opt/mastodon/
+COPY --from=yarn /opt/mastodon/ /opt/mastodon/
+COPY --from=bundler /opt/mastodon/ /opt/mastodon/
 COPY --from=bundler /usr/local/bundle/ /usr/local/bundle/
 # Copy libvips components to layer for precompiler
-COPY --from=libvips /usr/local/libvips/bin /usr/local/bin
-COPY --from=libvips /usr/local/libvips/lib /usr/local/lib
+COPY --from=libvips /usr/local/libvips/bin/ /usr/local/bin/
+COPY --from=libvips /usr/local/libvips/lib/ /usr/local/lib/
 
 ARG TARGETPLATFORM
 
@@ -367,16 +367,16 @@ RUN \
 COPY . /opt/mastodon/
 
 # Copy compiled assets to layer
-COPY --from=precompiler /opt/mastodon/public/packs /opt/mastodon/public/packs
-COPY --from=precompiler /opt/mastodon/public/assets /opt/mastodon/public/assets
+COPY --from=precompiler /opt/mastodon/public/packs/ /opt/mastodon/public/packs/
+COPY --from=precompiler /opt/mastodon/public/assets/ /opt/mastodon/public/assets/
 # Copy bundler components to layer
 COPY --from=bundler /usr/local/bundle/ /usr/local/bundle/
 # Copy libvips components to layer
-COPY --from=libvips /usr/local/libvips/bin /usr/local/bin
-COPY --from=libvips /usr/local/libvips/lib /usr/local/lib
+COPY --from=libvips /usr/local/libvips/bin/ /usr/local/bin/
+COPY --from=libvips /usr/local/libvips/lib/ /usr/local/lib/
 # Copy ffpmeg components to layer
-COPY --from=ffmpeg /usr/local/ffmpeg/bin /usr/local/bin
-COPY --from=ffmpeg /usr/local/ffmpeg/lib /usr/local/lib
+COPY --from=ffmpeg /usr/local/ffmpeg/bin/ /usr/local/bin/
+COPY --from=ffmpeg /usr/local/ffmpeg/lib/ /usr/local/lib/
 
 RUN \
   ldconfig; \
