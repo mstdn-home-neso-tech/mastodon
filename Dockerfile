@@ -28,7 +28,7 @@ FROM docker.io/ruby:${RUBY_VERSION}-slim-${DEBIAN_VERSION} AS ruby
 # Overwrite existence of 'alpha.X' in version.rb [--build-arg MASTODON_VERSION_PRERELEASE="nightly.2023.11.09"]
 ARG MASTODON_VERSION_PRERELEASE=""
 # Append build metadata or fork information to version.rb [--build-arg MASTODON_VERSION_METADATA="pr-123456"]
-ARG MASTODON_VERSION_METADATA=""
+ARG MASTODON_VERSION_METADATA="nesotech-20240805"
 
 # Allow Ruby on Rails to serve static files
 # See: https://docs.joinmastodon.org/admin/config/#rails_serve_static_files
