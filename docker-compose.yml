@@ -95,7 +95,7 @@ services:
       - ./public/system:/mastodon/public/system
 
   streaming:
-    image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
+    image: ghcr.io/mstdn-home-neso-tech/mastodon:develop_streaming
     restart: always
     env_file: .env.production
     command: node ./streaming

@@ -312,7 +312,7 @@ RUN \
   rm -fr /opt/mastodon/tmp;
 
 # Prep final Mastodon Ruby layer
-FROM build AS mastodon
+FROM ruby AS mastodon
 
 ARG TARGETPLATFORM
 
