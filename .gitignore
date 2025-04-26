@@ -77,3 +77,6 @@ dist/mstdn.home.neso.tech.conf*
 .env.production*
 .env.production*
 dump*
+
+# Ignore local-only rspec configuration
+.rspec-local

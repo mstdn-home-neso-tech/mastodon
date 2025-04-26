@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import React from 'react';
+import type React from 'react';
 
 import { Router as OriginalRouter, useHistory } from 'react-router';
 
@@ -51,7 +51,8 @@ function normalizePath(
 
   if (
     layoutFromWindow() === 'multi-column' &&
-    !location.pathname?.startsWith('/deck')
+    location.pathname &&
+    !location.pathname.startsWith('/deck')
   ) {
     location.pathname = `/deck${location.pathname}`;
   }

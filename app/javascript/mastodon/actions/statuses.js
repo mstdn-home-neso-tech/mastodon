@@ -49,11 +49,13 @@ export function fetchStatusRequest(id, skipLoading) {
   };
 }
 
-export function fetchStatus(id, forceFetch = false) {
+export function fetchStatus(id, forceFetch = false, alsoFetchContext = true) {
   return (dispatch, getState) => {
     const skipLoading = !forceFetch && getState().getIn(['statuses', id], null) !== null;
 
-    dispatch(fetchContext(id));
+    if (alsoFetchContext) {
+      dispatch(fetchContext(id));
+    }
 
     if (skipLoading) {
       return;
@@ -136,7 +138,7 @@ export function deleteStatus(id, withRedraft = false) {
 
     dispatch(deleteStatusRequest(id));
 
-    api().delete(`/api/v1/statuses/${id}`).then(response => {
+    api().delete(`/api/v1/statuses/${id}`, { params: { delete_media: !withRedraft } }).then(response => {
       dispatch(deleteStatusSuccess(id));
       dispatch(deleteFromTimelines(id));
       dispatch(importFetchedAccount(response.data.account));

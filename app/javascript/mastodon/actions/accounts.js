@@ -1,4 +1,5 @@
 import { browserHistory } from 'mastodon/components/router';
+import { debounceWithDispatchAndArguments } from 'mastodon/utils/debounce';
 
 import api, { getLinks } from '../api';
 
@@ -141,6 +142,13 @@ export function fetchAccountFail(id, error) {
   };
 }
 
+/**
+ * @param {string} id
+ * @param {Object} options
+ * @param {boolean} [options.reblogs]
+ * @param {boolean} [options.notify]
+ * @returns {function(): void}
+ */
 export function followAccount(id, options = { reblogs: true }) {
   return (dispatch, getState) => {
     const alreadyFollowing = getState().getIn(['relationships', id, 'following']);
@@ -449,6 +457,20 @@ export function expandFollowingFail(id, error) {
   };
 }
 
+const debouncedFetchRelationships = debounceWithDispatchAndArguments((dispatch, ...newAccountIds) => {
+  if (newAccountIds.length === 0) {
+    return;
+  }
+
+  dispatch(fetchRelationshipsRequest(newAccountIds));
+
+  api().get(`/api/v1/accounts/relationships?with_suspended=true&${newAccountIds.map(id => `id[]=${id}`).join('&')}`).then(response => {
+    dispatch(fetchRelationshipsSuccess({ relationships: response.data }));
+  }).catch(error => {
+    dispatch(fetchRelationshipsFail(error));
+  });
+}, { delay: 500 });
+
 export function fetchRelationships(accountIds) {
   return (dispatch, getState) => {
     const state = getState();
@@ -460,13 +482,7 @@ export function fetchRelationships(accountIds) {
       return;
     }
 
-    dispatch(fetchRelationshipsRequest(newAccountIds));
-
-    api().get(`/api/v1/accounts/relationships?with_suspended=true&${newAccountIds.map(id => `id[]=${id}`).join('&')}`).then(response => {
-      dispatch(fetchRelationshipsSuccess({ relationships: response.data }));
-    }).catch(error => {
-      dispatch(fetchRelationshipsFail(error));
-    });
+    debouncedFetchRelationships(dispatch, ...newAccountIds);
   };
 }
 
