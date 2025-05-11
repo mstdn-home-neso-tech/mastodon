@@ -1,5 +1,5 @@
 # Using GitHub Actions, Build docker image, and push to Github Packages
-name: Build and Push Docker Image (nesotech -> ghcr.io)
+name: Build and Push Docker Image (nesotech -> ghcr.io) / streaming
 on:
   push:
     branches:
