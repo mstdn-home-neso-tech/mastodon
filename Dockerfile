@@ -128,6 +128,13 @@ RUN \
 # Create temporary build layer from base image
 FROM ruby AS build
 
+# Copy Node package configuration files into working directory
+COPY package.json yarn.lock .yarnrc.yml /opt/mastodon/
+COPY .yarn /opt/mastodon/.yarn
+
+# Copy Node.js binaries/libraries into layer
+COPY --from=node /usr/local/bin /usr/local/bin
+COPY --from=node /usr/local/lib /usr/local/lib
 ARG TARGETPLATFORM
 
 # hadolint ignore=DL3008
@@ -279,9 +286,7 @@ ARG TARGETPLATFORM
 # Copy Mastodon sources into layer
 COPY . /opt/mastodon/
 
-# Copy Node.js binaries/libraries into layer
-COPY --from=node /usr/local/bin /usr/local/bin
-COPY --from=node /usr/local/lib /usr/local/lib
+
 
 RUN \
   # Configure Corepack
@@ -312,7 +317,7 @@ RUN \
   rm -fr /opt/mastodon/tmp;
 
 # Prep final Mastodon Ruby layer
-FROM build AS mastodon
+FROM ruby AS mastodon
 
 ARG TARGETPLATFORM
 
