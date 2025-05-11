@@ -17,7 +17,7 @@ module Mastodon
     end
 
     def default_prerelease
-      'alpha.4'
+      'alpha.4-nesotech20250512'
     end
 
     def prerelease
