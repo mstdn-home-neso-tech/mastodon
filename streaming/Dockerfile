@@ -105,6 +105,8 @@ RUN \
 # Install Node packages
   yarn workspaces focus --production @mastodon/streaming;
 
+RUN yarn install --production --frozen-lockfile
+
 # Set the running user for resulting container
 USER mastodon
 # Expose default Streaming ports

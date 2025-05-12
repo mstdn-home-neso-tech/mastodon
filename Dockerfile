@@ -287,6 +287,8 @@ RUN \
 # Install Node packages
   yarn workspaces focus --production @mastodon/mastodon;
 
+RUN yarn install --production --frozen-lockfile
+
 # Create temporary assets build layer from build layer
 FROM build AS precompiler
 
