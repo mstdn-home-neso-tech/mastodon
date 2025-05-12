@@ -1,10 +1,10 @@
+
 # Using GitHub Actions, Build docker image, and push to Github Packages
 name: Build and Push Docker Image (nesotech -> ghcr.io)
 on:
   push:
     branches:
-      - develop
-      - staging
+      - '*'
 
 env:
   REGISTRY: ghcr.io
@@ -21,24 +21,27 @@ jobs:
       - uses: actions/checkout@v3
         name: Checkout code
         with:
-          ref: develop
+          ref:  ${{ github.ref }}
           fetch-depth: 0
 
+        # see: https://github.com/docker/metadata-action
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
       - name: Log in to the Container registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile
           platforms: linux/amd64
