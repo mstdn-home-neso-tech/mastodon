@@ -3,10 +3,18 @@ import { IntlProvider } from 'react-intl';
 import { MemoryRouter } from 'react-router';
 
 import type { RenderOptions } from '@testing-library/react';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { render as rtlRender } from '@testing-library/react';
 
 import { IdentityContext } from './identity_context';
+
+beforeAll(() => {
+  global.requestIdleCallback = vi.fn((cb: IdleRequestCallback) => {
+    // @ts-expect-error IdleRequestCallback expects an argument of type IdleDeadline,
+    // but that doesn't exist in this environment.
+    cb();
+    return 0;
+  });
+});
 
 function render(
   ui: React.ReactElement,
@@ -38,7 +46,6 @@ function render(
 }
 
 // re-export everything
-// eslint-disable-next-line import/no-extraneous-dependencies
 export * from '@testing-library/react';
 
 // override render method

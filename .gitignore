@@ -21,10 +21,11 @@
 /public/system
 /public/assets
 /public/packs
+/public/packs-dev
 /public/packs-test
 .env
 .env.production
-/node_modules/
+node_modules/
 /build/
 
 # Ignore Vagrant files
@@ -75,5 +76,6 @@ docker-compose.override.yml
 # Ignore local nginx config file
 dist/mstdn.home.neso.tech.conf*
 .env.production*
-.env.production*
 dump*
+# Ignore local-only rspec configuration
+.rspec-local

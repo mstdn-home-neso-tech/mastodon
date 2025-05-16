@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['stylelint-config-standard-scss'],
+  extends: ['stylelint-config-standard-scss', 'stylelint-config-prettier-scss'],
   ignoreFiles: [
     'app/javascript/styles/mastodon/reset.scss',
     'coverage/**/*',
@@ -31,7 +31,7 @@ module.exports = {
   },
   overrides: [
     {
-      'files': ['app/javascript/styles/mailer.scss'],
+      'files': ['app/javascript/styles/entrypoints/mailer.scss'],
       rules: {
         'property-no-unknown': [
           true,

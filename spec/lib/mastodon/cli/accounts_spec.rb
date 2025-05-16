@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'mastodon/cli/accounts'
 
-describe Mastodon::CLI::Accounts do
+RSpec.describe Mastodon::CLI::Accounts do
   subject { cli.invoke(action, arguments, options) }
 
   let(:cli) { described_class.new }
@@ -67,6 +67,25 @@ describe Mastodon::CLI::Accounts do
             expect { subject }
               .to raise_error(Thor::Error, %r{Failure/Error: email})
           end
+        end
+      end
+
+      context 'with min_age setting' do
+        let(:options) { { email: 'tootctl@example.com', confirmed: true } }
+
+        before do
+          Setting.min_age = 42
+        end
+
+        it_behaves_like 'a new user with given email address and username'
+
+        it 'creates a new user with confirmed status' do
+          expect { subject }
+            .to output_results('New password')
+
+          user = User.find_by(email: options[:email])
+
+          expect(user.confirmed?).to be(true)
         end
       end
 
@@ -609,6 +628,25 @@ describe Mastodon::CLI::Accounts do
         expect(unfollow_service).to have_received(:call).with(follower_chris, target_account).once
         expect(unfollow_service).to have_received(:call).with(follower_rambo, target_account).once
         expect(unfollow_service).to have_received(:call).with(follower_ana, target_account).once
+      end
+    end
+  end
+
+  describe '#fix_duplicates' do
+    let(:action) { :fix_duplicates }
+    let(:service_double) { instance_double(ActivityPub::FetchRemoteAccountService, call: nil) }
+    let(:uri) { 'https://host.example/same/value' }
+
+    context 'when there are duplicate URI accounts' do
+      before do
+        Fabricate.times(2, :account, domain: 'host.example', uri: uri)
+        allow(ActivityPub::FetchRemoteAccountService).to receive(:new).and_return(service_double)
+      end
+
+      it 'finds the duplicates and calls fetch remote account service' do
+        expect { subject }
+          .to output_results('Duplicates found')
+        expect(service_double).to have_received(:call).with(uri)
       end
     end
   end

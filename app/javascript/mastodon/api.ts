@@ -1,4 +1,9 @@
-import type { AxiosResponse, Method, RawAxiosRequestHeaders } from 'axios';
+import type {
+  AxiosError,
+  AxiosResponse,
+  Method,
+  RawAxiosRequestHeaders,
+} from 'axios';
 import axios from 'axios';
 import LinkHeader from 'http-link-header';
 
@@ -41,7 +46,10 @@ const authorizationTokenFromInitialState = (): RawAxiosRequestHeaders => {
 
 // eslint-disable-next-line import/no-default-export
 export default function api(withAuthorization = true) {
-  return axios.create({
+  const instance = axios.create({
+    transitional: {
+      clarifyTimeoutError: true,
+    },
     headers: {
       ...csrfHeader,
       ...(withAuthorization ? authorizationTokenFromInitialState() : {}),
@@ -57,16 +65,35 @@ export default function api(withAuthorization = true) {
       },
     ],
   });
+
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => {
+      if (response.headers.deprecation) {
+        console.warn(
+          `Deprecated request: ${response.config.method} ${response.config.url}`,
+        );
+      }
+      return response;
+    },
+    (error: AxiosError) => {
+      return Promise.reject(error);
+    },
+  );
+
+  return instance;
 }
 
+type ApiUrl = `v${1 | 2}/${string}`;
 type RequestParamsOrData = Record<string, unknown>;
 
 export async function apiRequest<ApiResponse = unknown>(
   method: Method,
   url: string,
   args: {
+    signal?: AbortSignal;
     params?: RequestParamsOrData;
     data?: RequestParamsOrData;
+    timeout?: number;
   } = {},
 ) {
   const { data } = await api().request<ApiResponse>({
@@ -79,28 +106,28 @@ export async function apiRequest<ApiResponse = unknown>(
 }
 
 export async function apiRequestGet<ApiResponse = unknown>(
-  url: string,
+  url: ApiUrl,
   params?: RequestParamsOrData,
 ) {
   return apiRequest<ApiResponse>('GET', url, { params });
 }
 
 export async function apiRequestPost<ApiResponse = unknown>(
-  url: string,
+  url: ApiUrl,
   data?: RequestParamsOrData,
 ) {
   return apiRequest<ApiResponse>('POST', url, { data });
 }
 
 export async function apiRequestPut<ApiResponse = unknown>(
-  url: string,
+  url: ApiUrl,
   data?: RequestParamsOrData,
 ) {
   return apiRequest<ApiResponse>('PUT', url, { data });
 }
 
 export async function apiRequestDelete<ApiResponse = unknown>(
-  url: string,
+  url: ApiUrl,
   params?: RequestParamsOrData,
 ) {
   return apiRequest<ApiResponse>('DELETE', url, { params });

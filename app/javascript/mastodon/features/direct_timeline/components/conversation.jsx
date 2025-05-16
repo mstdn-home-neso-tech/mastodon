@@ -24,7 +24,7 @@ import AvatarComposite from 'mastodon/components/avatar_composite';
 import { IconButton } from 'mastodon/components/icon_button';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import StatusContent from 'mastodon/components/status_content';
-import DropdownMenuContainer from 'mastodon/containers/dropdown_menu_container';
+import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { autoPlayGif } from 'mastodon/initial_state';
 import { makeGetStatus } from 'mastodon/selectors';
 
@@ -170,7 +170,7 @@ export const Conversation = ({ conversation, scrollKey, onMoveUp, onMoveDown }) 
 
   return (
     <HotKeys handlers={handlers}>
-      <div className={classNames('conversation focusable muted', { 'conversation--unread': unread })} tabIndex={0}>
+      <div className={classNames('conversation focusable muted', { unread })} tabIndex={0}>
         <div className='conversation__avatar' onClick={handleClick} role='presentation'>
           <AvatarComposite accounts={accounts} size={48} />
         </div>
@@ -205,7 +205,7 @@ export const Conversation = ({ conversation, scrollKey, onMoveUp, onMoveDown }) 
             <IconButton className='status__action-bar-button' title={intl.formatMessage(messages.reply)} icon='reply' iconComponent={ReplyIcon} onClick={handleReply} />
 
             <div className='status__action-bar-dropdown'>
-              <DropdownMenuContainer
+              <Dropdown
                 scrollKey={scrollKey}
                 status={lastStatus}
                 items={menu}

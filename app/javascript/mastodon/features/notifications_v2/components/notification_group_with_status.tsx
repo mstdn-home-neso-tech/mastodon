@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { JSX } from 'react';
 
 import classNames from 'classnames';
 
@@ -6,17 +7,29 @@ import { HotKeys } from 'react-hotkeys';
 
 import { replyComposeById } from 'mastodon/actions/compose';
 import { navigateToStatus } from 'mastodon/actions/statuses';
+import { Avatar } from 'mastodon/components/avatar';
+import { AvatarGroup } from 'mastodon/components/avatar_group';
 import type { IconProp } from 'mastodon/components/icon';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
-import { useAppDispatch } from 'mastodon/store';
+import { NOTIFICATIONS_GROUP_MAX_AVATARS } from 'mastodon/models/notification_group';
+import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
-import { AvatarGroup } from './avatar_group';
+import { DisplayedName } from './displayed_name';
 import { EmbeddedStatus } from './embedded_status';
-import { NamesList } from './names_list';
+
+export const AvatarById: React.FC<{ accountId: string }> = ({ accountId }) => {
+  const account = useAppSelector((state) => state.accounts.get(accountId));
+
+  if (!account) return null;
+
+  return <Avatar withLink account={account} size={28} />;
+};
 
 export type LabelRenderer = (
-  values: Record<string, React.ReactNode>,
+  displayedName: JSX.Element,
+  total: number,
+  seeMoreHref?: string,
 ) => JSX.Element;
 
 export const NotificationGroupWithStatus: React.FC<{
@@ -31,6 +44,7 @@ export const NotificationGroupWithStatus: React.FC<{
   labelSeeMoreHref?: string;
   type: string;
   unread: boolean;
+  additionalContent?: JSX.Element;
 }> = ({
   icon,
   iconId,
@@ -43,21 +57,22 @@ export const NotificationGroupWithStatus: React.FC<{
   labelSeeMoreHref,
   type,
   unread,
+  additionalContent,
 }) => {
   const dispatch = useAppDispatch();
 
   const label = useMemo(
     () =>
-      labelRenderer({
-        name: (
-          <NamesList
-            accountIds={accountIds}
-            total={count}
-            seeMoreHref={labelSeeMoreHref}
-          />
-        ),
-      }),
+      labelRenderer(
+        <DisplayedName accountIds={accountIds} />,
+        count,
+        labelSeeMoreHref,
+      ),
     [labelRenderer, accountIds, count, labelSeeMoreHref],
+  );
+
+  const isPrivateMention = useAppSelector(
+    (state) => state.statuses.getIn([statusId, 'visibility']) === 'direct',
   );
 
   const handlers = useMemo(
@@ -79,7 +94,10 @@ export const NotificationGroupWithStatus: React.FC<{
         role='button'
         className={classNames(
           `notification-group focusable notification-group--${type}`,
-          { 'notification-group--unread': unread },
+          {
+            'notification-group--unread': unread,
+            'notification-group--direct': isPrivateMention,
+          },
         )}
         tabIndex={0}
       >
@@ -90,9 +108,17 @@ export const NotificationGroupWithStatus: React.FC<{
         <div className='notification-group__main'>
           <div className='notification-group__main__header'>
             <div className='notification-group__main__header__wrapper'>
-              <AvatarGroup accountIds={accountIds} />
+              <AvatarGroup>
+                {accountIds
+                  .slice(0, NOTIFICATIONS_GROUP_MAX_AVATARS)
+                  .map((id) => (
+                    <AvatarById key={id} accountId={id} />
+                  ))}
+              </AvatarGroup>
 
-              {actions}
+              {actions && (
+                <div className='notification-group__actions'>{actions}</div>
+              )}
             </div>
 
             <div className='notification-group__main__header__label'>
@@ -104,6 +130,12 @@ export const NotificationGroupWithStatus: React.FC<{
           {statusId && (
             <div className='notification-group__main__status'>
               <EmbeddedStatus statusId={statusId} />
+            </div>
+          )}
+
+          {additionalContent && (
+            <div className='notification-group__main__additional-content'>
+              {additionalContent}
             </div>
           )}
         </div>
