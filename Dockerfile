@@ -185,6 +185,7 @@ RUN \
   rm /usr/local/bin/yarn*; \
   corepack enable; \
   corepack prepare --activate; \
+  yarn global add update-browserslist-db; \
   npx update-browserslist-db@latest ;\
   yarn install
 
