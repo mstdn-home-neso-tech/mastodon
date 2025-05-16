@@ -394,7 +394,9 @@ RUN \
   mkdir -p /opt/mastodon/public/system; \
   chown mastodon:mastodon /opt/mastodon/public/system; \
 # Set Mastodon user as owner of tmp folder
-  chown -R mastodon:mastodon /opt/mastodon/tmp;
+  chown -R mastodon:mastodon /opt/mastodon/tmp; \
+# Set Mastodon user as owner of assets folder
+  chown -R mastodon:mastodon /opt/mastodon/public/assets;
 
 # Proxmox のDocker on LXC 用の対応
 RUN chown -R mastodon:mastodon /opt/mastodon
