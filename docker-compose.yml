@@ -13,6 +13,7 @@ services:
       - ./caddy/caddy_data:/data
       - ./caddy/caddy_config:/config
       - ./public/system:/mastodon/public/system
+      - ./caddy/logs:/var/log/caddy/
     networks:
       - internal_network
       - external_network
@@ -74,6 +75,9 @@ services:
     #   - 9200:9200
   web:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
+    # image: ghcr.io/mstdn-home-neso-tech/mastodon:sha-2d6a061
+    # image: ghcr.io/mastodon/mastodon:v4.3.8
+
     restart: always
     env_file: .env.production
     command: bundle exec puma -C config/puma.rb
@@ -96,9 +100,14 @@ services:
 
   streaming:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop_streaming
+    # image: ghcr.io/mstdn-home-neso-tech/mastodon:sha-2d6a061_streaming
+    # image: ghcr.io/mastodon/mastodon-streaming:v4.3.8
+
     restart: always
     env_file: .env.production
-    command: node ./streaming
+    # command: node ./streaming
+    command: node ./streaming/index.js
+
     networks:
       - external_network
       - internal_network
@@ -113,6 +122,9 @@ services:
 
   sidekiq:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
+    # image: ghcr.io/mstdn-home-neso-tech/mastodon:sha-2d6a061
+    # image: ghcr.io/mastodon/mastodon:v4.3.8
+
     restart: always
     env_file: .env.production
     environment:
