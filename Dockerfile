@@ -185,9 +185,8 @@ RUN \
   rm /usr/local/bin/yarn*; \
   corepack enable; \
   corepack prepare --activate; \
-  yarn global add update-browserslist-db; \
-  yarn update-browserslist-db@latest ;\
-  yarn install
+  yarn install ;\
+  yarn dlx update-browserslist-db@latest
 
 # Create temporary libvips specific build layer from build layer
 FROM build AS libvips
