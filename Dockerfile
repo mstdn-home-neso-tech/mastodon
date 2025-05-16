@@ -185,7 +185,7 @@ RUN \
   rm /usr/local/bin/yarn*; \
   corepack enable; \
   corepack prepare --activate; \
-  yarn install --frozen-lockfile
+  yarn install
 
 # Create temporary libvips specific build layer from build layer
 FROM build AS libvips
