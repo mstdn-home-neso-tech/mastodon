@@ -181,14 +181,6 @@ RUN \
   libx265-dev \
   ;
 
-# Configure Corepack
-RUN \
-  rm /usr/local/bin/yarn*; \
-  corepack enable; \
-  corepack prepare --activate; \
-  yarn install ;\
-  yarn dlx update-browserslist-db@latest
-
 # Create temporary libvips specific build layer from build layer
 FROM build AS libvips
 
@@ -320,7 +312,7 @@ RUN \
   rm -fr /opt/mastodon/tmp;
 
 # Prep final Mastodon Ruby layer
-FROM build AS mastodon
+FROM ruby AS mastodon
 
 ARG TARGETPLATFORM
 
@@ -401,13 +393,8 @@ RUN \
   # Pre-create and chown system volume to Mastodon user
   mkdir -p /opt/mastodon/public/system; \
   chown mastodon:mastodon /opt/mastodon/public/system; \
-# Set Mastodon user as owner of tmp folder
-  chown -R mastodon:mastodon /opt/mastodon/tmp; \
-# Set Mastodon user as owner of assets folder
-  chown -R mastodon:mastodon /opt/mastodon/public/assets;
-
-# Proxmox のDocker on LXC 用の対応
-RUN chown -R mastodon:mastodon /opt/mastodon
+  # Set Mastodon user as owner of tmp folder
+  chown -R mastodon:mastodon /opt/mastodon/tmp;
 
 # Set the running user for resulting container
 USER mastodon
