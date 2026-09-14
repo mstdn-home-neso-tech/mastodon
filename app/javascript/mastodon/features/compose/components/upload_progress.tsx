@@ -4,7 +4,6 @@ import { animated, useSpring } from '@react-spring/web';
 
 import UploadFileIcon from '@/material-icons/400-24px/upload_file.svg?react';
 import { Icon } from 'mastodon/components/icon';
-import { reduceMotion } from 'mastodon/initial_state';
 
 interface UploadProgressProps {
   active: boolean;
@@ -20,7 +19,7 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
   const styles = useSpring({
     from: { width: '0%' },
     to: { width: `${progress}%` },
-    immediate: reduceMotion || !active, // If this is not active, update the UI immediately.
+    immediate: !active, // If this is not active, update the UI immediately.
   });
   if (!active) {
     return null;
@@ -31,17 +30,19 @@ export const UploadProgress: React.FC<UploadProgressProps> = ({
       <Icon id='upload' icon={UploadFileIcon} />
 
       <div className='upload-progress__message'>
-        {isProcessing ? (
-          <FormattedMessage
-            id='upload_progress.processing'
-            defaultMessage='Processing…'
-          />
-        ) : (
-          <FormattedMessage
-            id='upload_progress.label'
-            defaultMessage='Uploading…'
-          />
-        )}
+        <span>
+          {isProcessing ? (
+            <FormattedMessage
+              id='upload_progress.processing'
+              defaultMessage='Processing…'
+            />
+          ) : (
+            <FormattedMessage
+              id='upload_progress.label'
+              defaultMessage='Uploading…'
+            />
+          )}
+        </span>
 
         <div className='upload-progress__backdrop'>
           <animated.div className='upload-progress__tracker' style={styles} />

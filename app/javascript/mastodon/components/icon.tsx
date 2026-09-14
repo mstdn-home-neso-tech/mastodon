@@ -1,4 +1,8 @@
+import { useCallback } from 'react';
+
 import classNames from 'classnames';
+
+import type { IconWeight, Icon as PhosphorIcon } from '@phosphor-icons/react';
 
 import CheckBoxOutlineBlankIcon from '@/material-icons/400-24px/check_box_outline_blank.svg?react';
 import { isProduction } from 'mastodon/utils/environment';
@@ -11,16 +15,18 @@ export type IconProp = React.FC<SVGPropsWithTitle>;
 
 interface Props extends React.SVGProps<SVGSVGElement> {
   children?: never;
-  id: string;
+  id?: string;
   icon: IconProp;
-  title?: string;
+  noFill?: boolean;
+  weight?: IconWeight;
 }
 
 export const Icon: React.FC<Props> = ({
   id,
   icon: IconComponent,
   className,
-  title: titleProp,
+  'aria-label': ariaLabel,
+  noFill = false,
   ...other
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -34,20 +40,50 @@ export const Icon: React.FC<Props> = ({
     IconComponent = CheckBoxOutlineBlankIcon;
   }
 
-  const ariaHidden = titleProp ? undefined : true;
+  const ariaHidden = ariaLabel ? undefined : true;
   const role = !ariaHidden ? 'img' : undefined;
 
   // Set the title to an empty string to remove the built-in SVG one if any
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-  const title = titleProp || '';
+  const title = ariaLabel || '';
 
   return (
     <IconComponent
-      className={classNames('icon', `icon-${id}`, className)}
+      className={classNames(
+        'icon',
+        id && `icon-${id}`,
+        noFill && 'icon--no-fill',
+        className,
+      )}
       title={title}
       aria-hidden={ariaHidden}
+      aria-label={ariaLabel}
       role={role}
       {...other}
     />
   );
 };
+
+type MaybeWeight = IconWeight | false | null;
+
+export const iconWeight = (
+  Icon: PhosphorIcon,
+  weight?: MaybeWeight,
+): React.FC<SVGPropsWithTitle> => {
+  const IconWeight = (props: SVGPropsWithTitle) => (
+    <Icon {...props} weight={weight || 'regular'} />
+  );
+  return IconWeight;
+};
+
+export function useIconWeight(
+  Icon: PhosphorIcon,
+  weight?: MaybeWeight,
+): React.FC<SVGPropsWithTitle> {
+  return useCallback(
+    (props: SVGPropsWithTitle) => (
+      <Icon {...props} weight={weight || 'regular'} />
+    ),
+    [Icon, weight],
+  );
+}

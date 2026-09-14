@@ -13,6 +13,7 @@ export const StatusesCounter = (
       count: pluralReady,
       counter: <strong>{displayNumber}</strong>,
     }}
+    tagName='span'
   />
 );
 
@@ -27,6 +28,7 @@ export const FollowingCounter = (
       count: pluralReady,
       counter: <strong>{displayNumber}</strong>,
     }}
+    tagName='span'
   />
 );
 
@@ -41,5 +43,21 @@ export const FollowersCounter = (
       count: pluralReady,
       counter: <strong>{displayNumber}</strong>,
     }}
+    tagName='span'
+  />
+);
+
+export const FollowersYouKnowCounter = (
+  displayNumber: React.ReactNode,
+  pluralReady: number,
+) => (
+  <FormattedMessage
+    id='account.followers_you_know_counter'
+    defaultMessage='{counter} you know'
+    values={{
+      count: pluralReady,
+      counter: <strong>{displayNumber}</strong>,
+    }}
+    tagName='span'
   />
 );

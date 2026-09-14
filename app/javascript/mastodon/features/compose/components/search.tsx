@@ -1,4 +1,11 @@
-import { useCallback, useState, useRef } from 'react';
+import {
+  useCallback,
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useId,
+} from 'react';
 
 import {
   defineMessages,
@@ -12,6 +19,13 @@ import { useHistory } from 'react-router-dom';
 
 import { isFulfilled } from '@reduxjs/toolkit';
 
+import {
+  FOCUS_TARGET,
+  useFocusOnNavigation,
+} from '@/mastodon/components/navigation_focus_target';
+import { getCollectionPath } from '@/mastodon/features/collections/utils';
+import { useMergedRefs } from '@/mastodon/hooks/useMergedRefs';
+import { isRedesignEnabled } from '@/mastodon/utils/environment';
 import CancelIcon from '@/material-icons/400-24px/cancel-fill.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
@@ -29,6 +43,7 @@ import { HASHTAG_REGEX } from 'mastodon/utils/hashtags';
 
 const messages = defineMessages({
   placeholder: { id: 'search.placeholder', defaultMessage: 'Search' },
+  clearSearch: { id: 'search.clear', defaultMessage: 'Clear search' },
   placeholderSignedIn: {
     id: 'search.search_or_paste',
     defaultMessage: 'Search or paste URL',
@@ -46,8 +61,32 @@ const labelForRecentSearch = (search: RecentSearch) => {
   }
 };
 
-const unfocus = () => {
-  document.querySelector('.ui')?.parentElement?.focus();
+const ClearButton: React.FC<{
+  onClick: () => void;
+  hasValue: boolean;
+}> = ({ onClick, hasValue }) => {
+  const intl = useIntl();
+
+  return (
+    <div
+      className={classNames('search__icon-wrapper', { 'has-value': hasValue })}
+    >
+      <Icon id='search' icon={SearchIcon} className='search__icon' />
+      <button
+        type='button'
+        onClick={onClick}
+        className='search__icon search__icon--clear-button'
+        tabIndex={hasValue ? undefined : -1}
+        aria-hidden={!hasValue}
+      >
+        <Icon
+          id='times-circle'
+          icon={CancelIcon}
+          aria-label={intl.formatMessage(messages.clearSearch)}
+        />
+      </button>
+    </div>
+  );
 };
 
 interface SearchOption {
@@ -72,164 +111,14 @@ export const Search: React.FC<{
   const [expanded, setExpanded] = useState(false);
   const [selectedOption, setSelectedOption] = useState(-1);
   const [quickActions, setQuickActions] = useState<SearchOption[]>([]);
-  const searchOptions: SearchOption[] = [];
+  const focusOnNavigation = useFocusOnNavigation(FOCUS_TARGET.SEARCH);
 
-  if (searchEnabled) {
-    searchOptions.push(
-      {
-        key: 'prompt-has',
-        label: (
-          <>
-            <mark>has:</mark>{' '}
-            <FormattedList
-              type='disjunction'
-              value={['media', 'poll', 'embed']}
-            />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('has:');
-        },
-      },
-      {
-        key: 'prompt-is',
-        label: (
-          <>
-            <mark>is:</mark>{' '}
-            <FormattedList type='disjunction' value={['reply', 'sensitive']} />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('is:');
-        },
-      },
-      {
-        key: 'prompt-language',
-        label: (
-          <>
-            <mark>language:</mark>{' '}
-            <FormattedMessage
-              id='search_popout.language_code'
-              defaultMessage='ISO language code'
-            />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('language:');
-        },
-      },
-      {
-        key: 'prompt-from',
-        label: (
-          <>
-            <mark>from:</mark>{' '}
-            <FormattedMessage id='search_popout.user' defaultMessage='user' />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('from:');
-        },
-      },
-      {
-        key: 'prompt-before',
-        label: (
-          <>
-            <mark>before:</mark>{' '}
-            <FormattedMessage
-              id='search_popout.specific_date'
-              defaultMessage='specific date'
-            />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('before:');
-        },
-      },
-      {
-        key: 'prompt-during',
-        label: (
-          <>
-            <mark>during:</mark>{' '}
-            <FormattedMessage
-              id='search_popout.specific_date'
-              defaultMessage='specific date'
-            />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('during:');
-        },
-      },
-      {
-        key: 'prompt-after',
-        label: (
-          <>
-            <mark>after:</mark>{' '}
-            <FormattedMessage
-              id='search_popout.specific_date'
-              defaultMessage='specific date'
-            />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('after:');
-        },
-      },
-      {
-        key: 'prompt-in',
-        label: (
-          <>
-            <mark>in:</mark>{' '}
-            <FormattedList
-              type='disjunction'
-              value={['all', 'library', 'public']}
-            />
-          </>
-        ),
-        action: (e) => {
-          e.preventDefault();
-          insertText('in:');
-        },
-      },
-    );
-  }
+  const unfocus = useCallback(() => {
+    document.querySelector('.ui')?.parentElement?.focus();
+    setExpanded(false);
+  }, []);
 
-  const recentOptions: SearchOption[] = recent.map((search) => ({
-    key: `${search.type}/${search.q}`,
-    label: labelForRecentSearch(search),
-    action: () => {
-      setValue(search.q);
-
-      if (search.type === 'account') {
-        history.push(`/@${search.q}`);
-      } else if (search.type === 'hashtag') {
-        history.push(`/tags/${search.q}`);
-      } else {
-        const queryParams = new URLSearchParams({ q: search.q });
-        if (search.type) queryParams.set('type', search.type);
-        history.push({ pathname: '/search', search: queryParams.toString() });
-      }
-
-      unfocus();
-    },
-    forget: (e) => {
-      e.stopPropagation();
-      void dispatch(forgetSearchResult(search.q));
-    },
-  }));
-
-  const navigableOptions = hasValue
-    ? quickActions.concat(searchOptions)
-    : recentOptions.concat(quickActions, searchOptions);
-
-  const insertText = (text: string) => {
+  const insertText = useCallback((text: string) => {
     setValue((currentValue) => {
       if (currentValue === '') {
         return text;
@@ -239,7 +128,181 @@ export const Search: React.FC<{
         return `${currentValue} ${text}`;
       }
     });
-  };
+  }, []);
+
+  const searchOptions = useMemo(() => {
+    if (!searchEnabled) {
+      return [];
+    } else {
+      const options: SearchOption[] = [
+        {
+          key: 'prompt-has',
+          label: (
+            <>
+              <mark>has:</mark>{' '}
+              <FormattedList
+                type='disjunction'
+                value={['media', 'poll', 'embed']}
+              />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('has:');
+          },
+        },
+        {
+          key: 'prompt-is',
+          label: (
+            <>
+              <mark>is:</mark>{' '}
+              <FormattedList
+                type='disjunction'
+                value={['reply', 'sensitive']}
+              />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('is:');
+          },
+        },
+        {
+          key: 'prompt-language',
+          label: (
+            <>
+              <mark>language:</mark>{' '}
+              <FormattedMessage
+                id='search_popout.language_code'
+                defaultMessage='ISO language code'
+              />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('language:');
+          },
+        },
+        {
+          key: 'prompt-from',
+          label: (
+            <>
+              <mark>from:</mark>{' '}
+              <FormattedMessage id='search_popout.user' defaultMessage='user' />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('from:');
+          },
+        },
+        {
+          key: 'prompt-before',
+          label: (
+            <>
+              <mark>before:</mark>{' '}
+              <FormattedMessage
+                id='search_popout.specific_date'
+                defaultMessage='specific date'
+              />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('before:');
+          },
+        },
+        {
+          key: 'prompt-during',
+          label: (
+            <>
+              <mark>during:</mark>{' '}
+              <FormattedMessage
+                id='search_popout.specific_date'
+                defaultMessage='specific date'
+              />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('during:');
+          },
+        },
+        {
+          key: 'prompt-after',
+          label: (
+            <>
+              <mark>after:</mark>{' '}
+              <FormattedMessage
+                id='search_popout.specific_date'
+                defaultMessage='specific date'
+              />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('after:');
+          },
+        },
+        {
+          key: 'prompt-in',
+          label: (
+            <>
+              <mark>in:</mark>{' '}
+              <FormattedList
+                type='disjunction'
+                value={['all', 'library', 'public']}
+              />
+            </>
+          ),
+          action: (e) => {
+            e.preventDefault();
+            insertText('in:');
+          },
+        },
+      ];
+      return options;
+    }
+  }, [insertText]);
+
+  const recentOptions: SearchOption[] = useMemo(
+    () =>
+      recent.map((search) => ({
+        key: `${search.type}/${search.q}`,
+        label: labelForRecentSearch(search),
+        action: () => {
+          setValue(search.q);
+
+          if (search.type === 'account') {
+            history.push(`/@${search.q}`);
+          } else if (search.type === 'hashtag') {
+            history.push(`/tags/${search.q}`);
+          } else {
+            const queryParams = new URLSearchParams({ q: search.q });
+            if (search.type) queryParams.set('type', search.type);
+            history.push({
+              pathname: '/search',
+              search: queryParams.toString(),
+            });
+          }
+
+          unfocus();
+        },
+        forget: (e) => {
+          e.stopPropagation();
+          void dispatch(forgetSearchResult(search));
+        },
+      })),
+    [dispatch, history, recent, unfocus],
+  );
+
+  const navigableOptions: SearchOption[] = useMemo(
+    () =>
+      hasValue
+        ? quickActions.concat(searchOptions)
+        : recentOptions.concat(quickActions, searchOptions),
+    [hasValue, quickActions, recentOptions, searchOptions],
+  );
 
   const submit = useCallback(
     (q: string, type?: SearchType) => {
@@ -249,7 +312,7 @@ export const Search: React.FC<{
       history.push({ pathname: '/search', search: queryParams.toString() });
       unfocus();
     },
-    [dispatch, history],
+    [dispatch, history, unfocus],
   );
 
   const handleChange = useCallback(
@@ -281,6 +344,10 @@ export const Search: React.FC<{
                 } else if (result.payload.statuses[0]) {
                   history.push(
                     `/@${result.payload.statuses[0].account.acct}/${result.payload.statuses[0].id}`,
+                  );
+                } else if (result.payload.collections[0]) {
+                  history.push(
+                    getCollectionPath(result.payload.collections[0].id),
                   );
                 }
               }
@@ -369,25 +436,31 @@ export const Search: React.FC<{
 
       setQuickActions(newQuickActions);
     },
-    [dispatch, history, signedIn, setValue, setQuickActions, submit],
+    [signedIn, dispatch, unfocus, history, submit],
   );
 
   const handleClear = useCallback(() => {
     setValue('');
     setQuickActions([]);
     setSelectedOption(-1);
-  }, [setValue, setQuickActions, setSelectedOption]);
+    unfocus();
+  }, [unfocus]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
         case 'Escape':
           e.preventDefault();
-          unfocus();
+          searchInputRef.current?.focus();
+          setExpanded(false);
 
           break;
         case 'ArrowDown':
           e.preventDefault();
+
+          if (!expanded) {
+            setExpanded(true);
+          }
 
           if (navigableOptions.length > 0) {
             setSelectedOption(
@@ -427,10 +500,10 @@ export const Search: React.FC<{
           break;
       }
     },
-    [navigableOptions, value, selectedOption, setSelectedOption, submit],
+    [expanded, navigableOptions, selectedOption, submit, value],
   );
 
-  const handleFocus = useCallback(() => {
+  const handleInputFocus = useCallback(() => {
     setExpanded(true);
     setSelectedOption(-1);
 
@@ -446,17 +519,59 @@ export const Search: React.FC<{
     }
   }, [setExpanded, setSelectedOption, singleColumn]);
 
-  const handleBlur = useCallback(() => {
-    setExpanded(false);
+  const handleInputBlur = useCallback(() => {
     setSelectedOption(-1);
-  }, [setExpanded, setSelectedOption]);
+  }, [setSelectedOption]);
+
+  const getOptionFocusHandler = useCallback((index: number) => {
+    return () => {
+      setSelectedOption(index);
+    };
+  }, []);
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    // If the search popover is expanded, close it when tabbing or
+    // clicking outside of it or the search form, while allowing
+    // tabbing or clicking inside of the popover
+    if (expanded) {
+      function closeOnLeave(event: FocusEvent | MouseEvent) {
+        const form = formRef.current;
+        const isClickInsideForm =
+          form &&
+          (form === event.target || form.contains(event.target as Node));
+        if (!isClickInsideForm) {
+          setExpanded(false);
+        }
+      }
+      document.addEventListener('focusin', closeOnLeave);
+      document.addEventListener('click', closeOnLeave);
+
+      return () => {
+        document.removeEventListener('focusin', closeOnLeave);
+        document.removeEventListener('click', closeOnLeave);
+      };
+    }
+    return () => null;
+  }, [expanded]);
+
+  const searchOptionsHeading = useId();
 
   return (
-    <form className={classNames('search', { active: expanded })}>
+    <form
+      role='search'
+      ref={formRef}
+      className={classNames('search', { active: expanded })}
+    >
       <input
-        ref={searchInputRef}
+        ref={useMergedRefs(
+          searchInputRef,
+          isRedesignEnabled() ? focusOnNavigation : null,
+        )}
         className='search__input'
         type='text'
+        inputMode='search'
         placeholder={intl.formatMessage(
           signedIn ? messages.placeholderSignedIn : messages.placeholder,
         )}
@@ -466,25 +581,20 @@ export const Search: React.FC<{
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
       />
 
-      <button type='button' className='search__icon' onClick={handleClear}>
-        <Icon
-          id='search'
-          icon={SearchIcon}
-          className={hasValue ? '' : 'active'}
-        />
-        <Icon
-          id='times-circle'
-          icon={CancelIcon}
-          className={hasValue ? 'active' : ''}
-          aria-label={intl.formatMessage(messages.placeholder)}
-        />
-      </button>
+      <ClearButton hasValue={hasValue} onClick={handleClear} />
 
-      <div className='search__popout'>
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+      <div
+        className='search__popout'
+        role='dialog'
+        tabIndex={-1}
+        aria-labelledby={searchOptionsHeading}
+        onKeyDown={handleKeyDown}
+      >
         {!hasValue && (
           <>
             <h4>
@@ -497,19 +607,26 @@ export const Search: React.FC<{
             <div className='search__popout__menu'>
               {recentOptions.length > 0 ? (
                 recentOptions.map(({ label, key, action, forget }, i) => (
-                  <button
+                  <div
                     key={key}
+                    tabIndex={0}
+                    role='button'
                     onMouseDown={action}
+                    onFocus={getOptionFocusHandler(i)}
                     className={classNames(
                       'search__popout__menu__item search__popout__menu__item--flex',
                       { selected: selectedOption === i },
                     )}
                   >
                     <span>{label}</span>
-                    <button className='icon-button' onMouseDown={forget}>
+                    <button
+                      className='icon-button'
+                      onMouseDown={forget}
+                      type='button'
+                    >
                       <Icon id='times' icon={CloseIcon} />
                     </button>
-                  </button>
+                  </div>
                 ))
               ) : (
                 <div className='search__popout__menu__message'>
@@ -537,9 +654,11 @@ export const Search: React.FC<{
                 <button
                   key={key}
                   onMouseDown={action}
+                  onFocus={getOptionFocusHandler(i)}
                   className={classNames('search__popout__menu__item', {
                     selected: selectedOption === i,
                   })}
+                  type='button'
                 >
                   {label}
                 </button>
@@ -548,7 +667,7 @@ export const Search: React.FC<{
           </>
         )}
 
-        <h4>
+        <h4 id={searchOptionsHeading}>
           <FormattedMessage
             id='search_popout.options'
             defaultMessage='Search options'
@@ -557,19 +676,22 @@ export const Search: React.FC<{
 
         {searchEnabled && signedIn ? (
           <div className='search__popout__menu'>
-            {searchOptions.map(({ key, label, action }, i) => (
-              <button
-                key={key}
-                onMouseDown={action}
-                className={classNames('search__popout__menu__item', {
-                  selected:
-                    selectedOption ===
-                    (quickActions.length || recent.length) + i,
-                })}
-              >
-                {label}
-              </button>
-            ))}
+            {searchOptions.map(({ key, label, action }, i) => {
+              const currentIndex = (quickActions.length || recent.length) + i;
+              return (
+                <button
+                  key={key}
+                  onMouseDown={action}
+                  onFocus={getOptionFocusHandler(currentIndex)}
+                  className={classNames('search__popout__menu__item', {
+                    selected: selectedOption === currentIndex,
+                  })}
+                  type='button'
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         ) : (
           <div className='search__popout__menu__message'>
