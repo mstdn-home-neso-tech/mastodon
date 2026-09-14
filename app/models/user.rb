@@ -111,8 +111,6 @@ class User < ApplicationRecord
   scope :matches_ip, ->(value) { left_joins(:ips).merge(UserIp.contained_by(value)).group(users: [:id]) }
 
   before_validation :sanitize_role
-  before_validation :sanitize_time_zone
-  before_validation :sanitize_locale
   before_create :set_approved
   before_create :set_age_verified_at
   after_commit :send_pending_devise_notifications
