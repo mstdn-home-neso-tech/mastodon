@@ -43,8 +43,8 @@ class MediaAttachment < ApplicationRecord
   MAX_DESCRIPTION_LENGTH = 10_000
   MAX_DESCRIPTION_HARD_LENGTH_LIMIT = 10_000
 
-  IMAGE_LIMIT = 40.megabytes
-  VIDEO_LIMIT = 160.megabytes
+  IMAGE_LIMIT = 16.megabytes
+  VIDEO_LIMIT = 99.megabytes
 
   MAX_VIDEO_MATRIX_LIMIT = 8_294_400 # 3840x2160px
   MAX_VIDEO_FRAME_RATE   = 120
@@ -84,6 +84,8 @@ class MediaAttachment < ApplicationRecord
       blurhash: BLURHASH_OPTIONS,
     }.freeze,
   }.freeze
+
+  include MediaAttachment::CustomLimits # 自鯖用カスタム: 上流追従時もこの 1 行は残す（位置は IMAGE_STYLES の直後）
 
   IMAGE_CONVERTED_STYLES = {
     original: {

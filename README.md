@@ -34,8 +34,11 @@ Mastodon is a **free, open-source social network server** based on [ActivityPub]
   - `MAX_CHARS = 5000`
   - app/javascript/mastodon/features/compose/components/compose_form.js
   - app/validators/status_length_validator.rb
-- 投稿画像の上限:
-  - 本家と同様
+- メディアのアップロード上限（本家: 画像 16MB / 動画 99MB / 3840x2160px / 120fps / 36,000 フレーム）
+  - 画像 80MB / 動画 400MB / 動画 7680x4320px・240fps・72,000 フレーム / 画像の original も 7680x4320px 相当まで縮小しない
+  - app/models/concerns/media_attachment/custom_limits.rb（値はすべてここ。本家に無いファイル）
+  - app/models/media_attachment.rb は `include MediaAttachment::CustomLimits` の 1 行だけが本家との差分。本家追従時もこの行だけ残す
+  - spec/models/concerns/media_attachment/custom_limits_spec.rb で効いていることを検証
 - 固定ポストの数: 10
   - `PIN_LIMIT = 10`
   - app\validators\status_pin_validator.rb
