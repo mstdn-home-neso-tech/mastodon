@@ -34,8 +34,15 @@ Mastodon is a **free, open-source social network server** based on [ActivityPub]
   - `MAX_CHARS = 5000`
   - app/javascript/mastodon/features/compose/components/compose_form.js
   - app/validators/status_length_validator.rb
-- 投稿画像の上限:
-  - 本家と同様
+- メディアのアップロード上限（本家: 画像 16MB / 動画 99MB / 3840x2160px / 120fps / 36,000 フレーム）
+  - 環境変数で制御する。未設定時は本家と同じ既定値。値は `.env.production` で設定する（`.env.production.sample` 参照）
+    - `MEDIA_IMAGE_LIMIT_MB`: 画像サイズ上限（MB, 既定 16）
+    - `MEDIA_VIDEO_LIMIT_MB`: 動画サイズ上限（MB, 既定 99）
+    - `MEDIA_MAX_VIDEO_MATRIX`: 動画の総画素数上限（既定 8,294,400 = 3840x2160px。画像 original を縮小しない画素数もこれに追従）
+    - `MEDIA_MAX_VIDEO_FRAME_RATE`: 動画フレームレート上限（既定 120）
+    - `MEDIA_MAX_VIDEO_FRAMES`: 動画フレーム数上限（既定 36,000）
+  - 実装は app/models/media_attachment.rb の各定数（`IMAGE_LIMIT` / `VIDEO_LIMIT` / `MAX_VIDEO_*`）が上記 ENV を読む。本家追従で本ファイルが上書きされた場合は、この数行の ENV フォールバックを再適用する
+  - 大きいファイルはリバースプロキシ（nginx 等）の `client_max_body_size` もアプリ側上限以上に設定しないと、アプリに到達する前に 413 で弾かれる
 - 固定ポストの数: 10
   - `PIN_LIMIT = 10`
   - app\validators\status_pin_validator.rb
