@@ -46,8 +46,8 @@ class MediaAttachment < ApplicationRecord
   # 自鯖用カスタム: メディアアップロード上限を環境変数で制御する（未設定時は上流と同じ既定値）。
   # 値の変更はコード改変不要で .env から上書きできる。上流追従で本ファイルが上書きされた場合は、
   # この ENV フォールバックの数行を再適用すればカスタム値を維持できる。詳細は README を参照。
-  IMAGE_LIMIT = (ENV['MEDIA_IMAGE_LIMIT_MB'].presence&.to_i&.megabytes) || 16.megabytes
-  VIDEO_LIMIT = (ENV['MEDIA_VIDEO_LIMIT_MB'].presence&.to_i&.megabytes) || 99.megabytes
+  IMAGE_LIMIT = ENV['MEDIA_IMAGE_LIMIT_MB'].presence&.to_i&.megabytes || 16.megabytes
+  VIDEO_LIMIT = ENV['MEDIA_VIDEO_LIMIT_MB'].presence&.to_i&.megabytes || 99.megabytes
 
   MAX_VIDEO_MATRIX_LIMIT = (ENV['MEDIA_MAX_VIDEO_MATRIX'].presence || 8_294_400).to_i # 上流既定: 3840x2160px
   MAX_VIDEO_FRAME_RATE   = (ENV['MEDIA_MAX_VIDEO_FRAME_RATE'].presence || 120).to_i
