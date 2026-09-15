@@ -1,0 +1,72 @@
+# 毎日 upstream (mastodon/mastodon の main) を develop に取り込む。
+#
+#   - upstream に差分が無ければ何もしない
+#   - コンフリクトが無ければ PR を作って auto-merge (必須チェックが通れば自動マージ)
+#   - コンフリクトがあれば draft PR を作り、人が PR 上で解決する
+#   - 未マージの sync PR が残っている間は新しい PR を作らない
+#
+# ロジック本体: .github/scripts/sync-upstream.sh
+#
+# secret SYNC_UPSTREAM_TOKEN に PAT を設定すること。
+#   fine-grained: Contents / Pull requests / Workflows = Read and write (Issues = write はラベル作成用で任意)
+#   classic:      repo + workflow
+# GITHUB_TOKEN でも動くが、
+#   - 作った PR で pull_request トリガーの CI が起動しない (= 必須チェックが揃わず auto-merge されない)
+#   - upstream の変更に .github/workflows/ が含まれると push が拒否される
+# ため、実運用では PAT が必要。
+name: Sync upstream (mastodon/mastodon -> develop)
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # 毎日 03:00 JST
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'マージ結果の確認のみ (push / PR 作成をしない)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.repository == 'mstdn-home-neso-tech/mastodon'
+    timeout-minutes: 30
+    env:
+      # secrets は step の if では参照できないので job env に落とす
+      USING_PAT: ${{ secrets.SYNC_UPSTREAM_TOKEN != '' }}
+
+    steps:
+      - name: Warn if SYNC_UPSTREAM_TOKEN is not configured
+        if: env.USING_PAT == 'false'
+        run: |
+          echo "::warning::secret SYNC_UPSTREAM_TOKEN が未設定のため GITHUB_TOKEN で実行します。作成した PR で CI が起動せず、workflow ファイルの変更を含む push は失敗します。"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_UPSTREAM_TOKEN || github.token }}
+
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Sync upstream
+        id: sync
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_UPSTREAM_TOKEN || github.token }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
+          UPSTREAM_REPO: mastodon/mastodon
+          UPSTREAM_BRANCH: main
+          BASE_BRANCH: develop
+        run: .github/scripts/sync-upstream.sh
