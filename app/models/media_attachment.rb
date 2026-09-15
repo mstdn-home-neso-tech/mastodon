@@ -43,12 +43,15 @@ class MediaAttachment < ApplicationRecord
   MAX_DESCRIPTION_LENGTH = 10_000
   MAX_DESCRIPTION_HARD_LENGTH_LIMIT = 10_000
 
-  IMAGE_LIMIT = 16.megabytes
-  VIDEO_LIMIT = 99.megabytes
+  # 自鯖用カスタム: メディアアップロード上限を環境変数で制御する（未設定時は上流と同じ既定値）。
+  # 値の変更はコード改変不要で .env から上書きできる。上流追従で本ファイルが上書きされた場合は、
+  # この ENV フォールバックの数行を再適用すればカスタム値を維持できる。詳細は README を参照。
+  IMAGE_LIMIT = (ENV['MEDIA_IMAGE_LIMIT_MB'].presence&.to_i&.megabytes) || 16.megabytes
+  VIDEO_LIMIT = (ENV['MEDIA_VIDEO_LIMIT_MB'].presence&.to_i&.megabytes) || 99.megabytes
 
-  MAX_VIDEO_MATRIX_LIMIT = 8_294_400 # 3840x2160px
-  MAX_VIDEO_FRAME_RATE   = 120
-  MAX_VIDEO_FRAMES       = 36_000 # Approx. 5 minutes at 120 fps
+  MAX_VIDEO_MATRIX_LIMIT = (ENV['MEDIA_MAX_VIDEO_MATRIX'].presence || 8_294_400).to_i # 上流既定: 3840x2160px
+  MAX_VIDEO_FRAME_RATE   = (ENV['MEDIA_MAX_VIDEO_FRAME_RATE'].presence || 120).to_i
+  MAX_VIDEO_FRAMES       = (ENV['MEDIA_MAX_VIDEO_FRAMES'].presence || 36_000).to_i # 上流既定: 120fps で約 5 分
 
   IMAGE_FILE_EXTENSIONS = %w(.jpg .jpeg .png .gif .webp .heic .heif .avif).freeze
   VIDEO_FILE_EXTENSIONS = %w(.webm .mp4 .m4v .mov).freeze
@@ -74,7 +77,7 @@ class MediaAttachment < ApplicationRecord
 
   IMAGE_STYLES = {
     original: {
-      pixels: 8_294_400, # 3840x2160px
+      pixels: MAX_VIDEO_MATRIX_LIMIT, # 上流既定: 8_294_400 (3840x2160px)。動画の解像度上限に追従（画像 original を縮小しない画素数）
       file_geometry_parser: FastGeometryParser,
     }.freeze,
 
@@ -84,8 +87,6 @@ class MediaAttachment < ApplicationRecord
       blurhash: BLURHASH_OPTIONS,
     }.freeze,
   }.freeze
-
-  include MediaAttachment::CustomLimits # 自鯖用カスタム: 上流追従時もこの 1 行は残す（位置は IMAGE_STYLES の直後）
 
   IMAGE_CONVERTED_STYLES = {
     original: {
