@@ -7,18 +7,21 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 
 import { Button } from 'mastodon/components/button';
+import { NavigationFocusTarget } from 'mastodon/components/navigation_focus_target';
 
 import Option from './components/option';
 
 const mapStateToProps = state => ({
-  rules: state.getIn(['server', 'server', 'rules']),
+  rules: state.getIn(['server', 'server', 'item', 'rules']),
+  locale: state.getIn(['meta', 'locale']),
 });
 
 class Rules extends PureComponent {
 
   static propTypes = {
     onNextStep: PropTypes.func.isRequired,
-    rules: ImmutablePropTypes.list,
+    rules: PropTypes.arrayOf(PropTypes.object),
+    locale: PropTypes.string,
     selectedRuleIds: ImmutablePropTypes.set.isRequired,
     onToggle: PropTypes.func.isRequired,
   };
@@ -34,22 +37,24 @@ class Rules extends PureComponent {
   };
 
   render () {
-    const { rules, selectedRuleIds } = this.props;
+    const { rules, locale, selectedRuleIds } = this.props;
 
     return (
       <>
-        <h3 className='report-dialog-modal__title'><FormattedMessage id='report.rules.title' defaultMessage='Which rules are being violated?' /></h3>
+        <NavigationFocusTarget as='h1' className='report-dialog-modal__title'>
+          <FormattedMessage id='report.rules.title' defaultMessage='Which rules are being violated?' />
+        </NavigationFocusTarget>
         <p className='report-dialog-modal__lead'><FormattedMessage id='report.rules.subtitle' defaultMessage='Select all that apply' /></p>
 
         <div>
           {rules.map(item => (
             <Option
-              key={item.get('id')}
+              key={item.id}
               name='rule_ids'
-              value={item.get('id')}
-              checked={selectedRuleIds.includes(item.get('id'))}
+              value={item.id}
+              checked={selectedRuleIds.includes(item.id)}
               onToggle={this.handleRulesToggle}
-              label={item.get('text')}
+              label={item.translations?.[locale]?.text || item.translations?.[locale.split('-')[0]]?.text || item.text}
               multiple
             />
           ))}

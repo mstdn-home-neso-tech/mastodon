@@ -58,7 +58,7 @@ export const Story = ({
         </a>
 
         <div className='story__details__shared'>
-          {author ? <FormattedMessage id='link_preview.author' className='story__details__shared__author' defaultMessage='By {name}' values={{ name: authorAccount ? <AuthorLink accountId={authorAccount} /> : <strong>{author}</strong> }} /> : <span />}
+          {author ? <FormattedMessage id='link_preview.author' className='story__details__shared__author' defaultMessage='By {name}' values={{ name: authorAccount ? <AuthorLink accountId={authorAccount} /> : <strong>{author}</strong> }} tagName='span' /> : <span />}
           {typeof sharedTimes === 'number' ? <Link className='story__details__shared__pill' to={`/links/${encodeURIComponent(url)}`}><ShortNumber value={sharedTimes} renderer={sharesCountRenderer} /></Link> : <Skeleton width='10ch' />}
         </div>
       </div>
@@ -66,7 +66,7 @@ export const Story = ({
       <a className='story__thumbnail' href={url} target='blank' rel='noopener'>
         {thumbnail ? (
           <>
-            <div className={classNames('story__thumbnail__preview', { 'story__thumbnail__preview--hidden': thumbnailLoaded })}><Blurhash hash={blurhash} /></div>
+            {!thumbnailLoaded && <Blurhash hash={blurhash} className='story__thumbnail__preview' />}
             <img src={thumbnail} onLoad={handleImageLoad} alt={thumbnailDescription} title={thumbnailDescription} lang={lang} />
           </>
         ) : <Skeleton />}

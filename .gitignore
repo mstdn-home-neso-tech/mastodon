@@ -23,6 +23,7 @@
 /public/packs
 /public/packs-dev
 /public/packs-test
+stats.html
 .env
 .env.production
 node_modules/
@@ -79,3 +80,6 @@ dist/mstdn.home.neso.tech.conf*
 dump*
 # Ignore local-only rspec configuration
 .rspec-local
+
+*storybook.log
+storybook-static

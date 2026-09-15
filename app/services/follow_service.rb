@@ -15,6 +15,7 @@ class FollowService < BaseService
   # @option [Boolean] :bypass_locked
   # @option [Boolean] :bypass_limit Allow following past the total follow number
   # @option [Boolean] :with_rate_limit
+  # @option [String] :ref Client-side feature reference
   def call(source_account, target_account, options = {})
     @source_account = source_account
     @target_account = target_account
@@ -30,6 +31,7 @@ class FollowService < BaseService
     end
 
     ActivityTracker.increment('activity:interactions')
+    FeatureUsageTracker.for(:follow).increment(@options[:ref])
 
     # When an account follows someone for the first time, avoid showing
     # an empty home feed while the follow request is being processed
@@ -46,7 +48,7 @@ class FollowService < BaseService
   private
 
   def mark_home_feed_as_partial!
-    redis.set("account:#{@source_account.id}:regeneration", true, nx: true, ex: 1.day.seconds)
+    HomeFeed.new(@source_account).regeneration_in_progress!
   end
 
   def following_not_possible?
@@ -82,7 +84,7 @@ class FollowService < BaseService
 
     LocalNotificationWorker.perform_async(@target_account.id, follow.id, follow.class.name, 'follow')
     MergeWorker.perform_async(@target_account.id, @source_account.id, 'home')
-    MergeWorker.push_bulk(List.where(account: @source_account).joins(:list_accounts).where(list_accounts: { account_id: @target_account.id }).pluck(:id)) do |list_id|
+    MergeWorker.push_bulk(@source_account.owned_lists.with_list_account(@target_account).pluck(:id)) do |list_id|
       [@target_account.id, list_id, 'list']
     end
 
@@ -90,7 +92,7 @@ class FollowService < BaseService
   end
 
   def build_json(follow_request)
-    Oj.dump(serialize_payload(follow_request, ActivityPub::FollowSerializer))
+    serialize_payload(follow_request, ActivityPub::FollowSerializer).to_json
   end
 
   def follow_options
