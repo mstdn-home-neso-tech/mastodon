@@ -19,7 +19,6 @@ import { fetchStatus } from '@/mastodon/actions/statuses';
 import { useCurrentAccountId } from '@/mastodon/hooks/useAccountId';
 import { useAccountStatus } from '@/mastodon/hooks/useStatus';
 import { quickBoosting } from '@/mastodon/initial_state';
-import type { MenuItem as DropdownItem } from '@/mastodon/models/dropdown_menu';
 import type { AccountStatusShape } from '@/mastodon/models/status';
 import { selectStatusConditions } from '@/mastodon/selectors/statuses';
 import { useAppDispatch, useAppSelector } from '@/mastodon/store';
@@ -34,10 +33,9 @@ import { iconWeight, useIconWeight } from '../icon';
 import {
   Menu,
   MenuItem,
-  MenuItemDivider,
-  MenuItemLink,
   MenuList,
   MenuTrigger,
+  LegacyDropdownMenuItems,
 } from '../menu';
 
 import { boostItemState, quoteItemState } from './boost_button_utils';
@@ -55,10 +53,10 @@ interface StatusActionBarProps {
 
 const messages = defineMessages({
   replyAll: { id: 'status.replyAll', defaultMessage: 'Reply to thread' },
-  favourite: { id: 'status.favourite', defaultMessage: 'Favorite' },
+  favourite: { id: 'status.like', defaultMessage: 'Like' },
   removeFavourite: {
-    id: 'status.remove_favourite',
-    defaultMessage: 'Remove from favorites',
+    id: 'status.unlike',
+    defaultMessage: 'Unlike',
   },
 });
 
@@ -186,11 +184,11 @@ export const StatusActionBar: React.FC<StatusActionBarProps> = ({
         onClick={handleBookmarkClick}
       >
         {!status.bookmarked ? (
-          <FormattedMessage id='status.bookmark' defaultMessage='Bookmark' />
+          <FormattedMessage id='status.save' defaultMessage='Save' />
         ) : (
           <FormattedMessage
-            id='status.remove_bookmark'
-            defaultMessage='Remove bookmark'
+            id='status.remove_from_saved'
+            defaultMessage='Remove from Saved'
           />
         )}
       </ToggleIconButton>
@@ -316,34 +314,8 @@ const StatusActionMenu: React.FC<{
       </MenuTrigger>
 
       <MenuList placement='top-end'>
-        {menu.map((item, index) => (
-          <StatusActionItem key={index} item={item} />
-        ))}
+        <LegacyDropdownMenuItems items={menu} />
       </MenuList>
     </Menu>
   );
-};
-
-export const StatusActionItem: React.FC<{ item: DropdownItem }> = ({
-  item,
-}) => {
-  if (!item) {
-    return <MenuItemDivider />;
-  }
-
-  const commonProps = {
-    icon: item.icon,
-    disabled: item.disabled,
-    destructive: item.dangerous,
-    children: item.text,
-    description: item.description,
-  } as const;
-
-  if ('to' in item) {
-    return <MenuItemLink {...commonProps} to={item.to} as='link' />;
-  } else if ('href' in item) {
-    return <MenuItemLink {...commonProps} href={item.href} as='a' />;
-  }
-
-  return <MenuItem {...commonProps} onClick={item.action} />;
 };

@@ -10,6 +10,7 @@ import { BookmarkSimpleIcon } from '@phosphor-icons/react';
 import { Helmet } from '@unhead/react/helmet';
 
 import { statusInteraction } from '@/mastodon/actions/interactions_typed';
+import { fetchStatus } from '@/mastodon/actions/statuses';
 import { ToggleIconButton } from '@/mastodon/components/button/redesign';
 import { Column } from '@/mastodon/components/column';
 import {
@@ -19,11 +20,11 @@ import {
 import { DisplayNameSimple } from '@/mastodon/components/display_name/simple';
 import { useIconWeight } from '@/mastodon/components/icon';
 import { LoadingIndicator } from '@/mastodon/components/loading_indicator';
+import { LegacyDropdownMenuItems } from '@/mastodon/components/menu';
 import {
   FOCUS_TARGET,
   NavigationFocusTarget,
 } from '@/mastodon/components/navigation_focus_target';
-import { StatusActionItem } from '@/mastodon/components/status/action_bar';
 import {
   useStatusMenuActions,
   useTextForScreenReader,
@@ -71,6 +72,7 @@ export const StatusPage: React.FC = () => {
   const { statusId } = useParams<{ acct: string; statusId: string }>();
   const { multiColumn } = useColumnsContext();
   const intl = useIntl();
+  const dispatch = useAppDispatch();
 
   const [fullscreen, setFullscreen] = useState(isFullscreen);
   useEffect(() => {
@@ -84,7 +86,12 @@ export const StatusPage: React.FC = () => {
     };
   });
 
-  const status = useExpandedStatus(statusId, 'force');
+  const status = useExpandedStatus(statusId);
+  useEffect(() => {
+    dispatch(
+      fetchStatus(statusId, { forceFetch: true, alsoFetchContext: true }),
+    );
+  }, [dispatch, statusId]);
   const isLoading = useAppSelector(
     (state) => !!state.statuses.getIn([statusId, 'isLoading']),
   );
@@ -120,7 +127,6 @@ export const StatusPage: React.FC = () => {
     [],
   );
 
-  const dispatch = useAppDispatch();
   const handleBookmarkClick = useCallback(() => {
     dispatch(
       statusInteraction({
@@ -301,9 +307,7 @@ const StatusMenuItems: React.FC<{ status: ExpandedStatusShape }> = ({
 }) => {
   const menu = useStatusMenuActions({ status, contextType: 'detailed' });
 
-  return menu.map((item, index) => (
-    <StatusActionItem key={index} item={item} />
-  ));
+  return <LegacyDropdownMenuItems items={menu} />;
 };
 
 const StatusRelativeList: React.FC<{
