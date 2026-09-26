@@ -76,7 +76,7 @@ services:
   web:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
     # image: ghcr.io/mstdn-home-neso-tech/mastodon:sha-2d6a061
-    # image: ghcr.io/mastodon/mastodon:v4.7.1
+    # image: ghcr.io/mastodon/mastodon:v4.7.2
 
     restart: always
     env_file: .env.production
@@ -101,7 +101,7 @@ services:
   streaming:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop_streaming
     # image: ghcr.io/mstdn-home-neso-tech/mastodon:sha-2d6a061_streaming
-    # image: ghcr.io/mastodon/mastodon-streaming:v4.7.1
+    # image: ghcr.io/mastodon/mastodon-streaming:v4.7.2
 
     restart: always
     env_file: .env.production
@@ -123,7 +123,7 @@ services:
   sidekiq:
     image: ghcr.io/mstdn-home-neso-tech/mastodon:develop
     # image: ghcr.io/mstdn-home-neso-tech/mastodon:sha-2d6a061
-    # image: ghcr.io/mastodon/mastodon:v4.7.1
+    # image: ghcr.io/mastodon/mastodon:v4.7.2
 
     restart: always
     env_file: .env.production
