@@ -256,12 +256,15 @@ zh-TW:
         setting_display_media_default: 預設
         setting_display_media_hide_all: 全部隱藏
         setting_display_media_show_all: 全部顯示
+        setting_display_own_boosts: 於主要時間軸中顯示我自己的轉嘟
+        setting_display_own_posts: 於主要時間軸中顯示我自己的嘟文
         setting_emoji_style: emoji 風格
         setting_expand_spoilers: 永遠展開標有內容警告的嘟文
         setting_hide_network: 隱藏您的社交網路
         setting_missing_alt_text_modal: 於發出未含有 ALT 說明文字之嘟文前警告我
         setting_quick_boosting: 啟用快速轉嘟
         setting_reduce_motion: 減少過渡動畫效果
+        setting_split_default_privacy_discoverable: 使我的嘟文於公開時間軸與搜尋結果中可見
         setting_system_font_ui: 使用系統預設字型
         setting_system_scrollbars_ui: 使用系統預設捲動軸
         setting_theme: 佈景主題
@@ -271,6 +274,7 @@ zh-TW:
         setting_use_pending_items: 限速模式
         severity: 優先級
         sign_in_token_attempt: 安全代碼
+        sign_in_token_resend: 重新寄送安全碼
         title: 標題
         type: 匯入類型
         username: 使用者名稱

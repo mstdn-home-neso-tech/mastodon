@@ -260,12 +260,15 @@ he:
         setting_display_media_default: ברירת מחדל
         setting_display_media_hide_all: להסתיר הכל
         setting_display_media_show_all: להציג הכול
+        setting_display_own_boosts: הצג לי את ההידהודים שלי בפיד הראשי שלי
+        setting_display_own_posts: הצג לי את הפירסומים שלי בפיד הראשי שלי
         setting_emoji_style: סגנון רגישונים (אמוג'י)
         setting_expand_spoilers: להרחיב תמיד הודעות מסומנות באזהרת תוכן
         setting_hide_network: להחביא את הגרף החברתי שלך
         setting_missing_alt_text_modal: הזהר אותי לפני שאפרסם מדיה ללא תיאור alt text
         setting_quick_boosting: לאפשר הדהוד מהיר
         setting_reduce_motion: הפחתת תנועה בהנפשות
+        setting_split_default_privacy_discoverable: הפוך הודעותי לניתות לגילוי בפידים ציבוריים ותוצאות חיפוש
         setting_system_font_ui: להשתמש בגופן ברירת המחדל של המערכת
         setting_system_scrollbars_ui: להשתמש בפס הגלילה שהוא ברירת המחדל של המערכת
         setting_theme: ערכת העיצוב של האתר
@@ -275,6 +278,7 @@ he:
         setting_use_pending_items: מצב איטי
         severity: חומרה
         sign_in_token_attempt: קוד אבטחה
+        sign_in_token_resend: שליחה מחדש של קוד האבטחה
         title: כותרת
         type: סוג יבוא
         username: שם משתמש

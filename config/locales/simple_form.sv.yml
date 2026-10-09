@@ -257,12 +257,15 @@ sv:
         setting_display_media_default: Standard
         setting_display_media_hide_all: Dölj alla
         setting_display_media_show_all: Visa alla
+        setting_display_own_boosts: Visa mina egna boostar i mitt huvudflöde
+        setting_display_own_posts: Visa mina egna inlägg i mitt huvudflöde
         setting_emoji_style: Emoji-stil
         setting_expand_spoilers: Utöka alltid inlägg markerade med innehållsvarningar
         setting_hide_network: Göm ditt nätverk
         setting_missing_alt_text_modal: Varna mig innan jag gör mediainlägg utan alt-text
         setting_quick_boosting: Aktivera snabb boostning
         setting_reduce_motion: Minska rörelser i animationer
+        setting_split_default_privacy_discoverable: Gör mina inlägg upptäckbara i publika flödet och i sökresultat
         setting_system_font_ui: Använd systemets standardfont
         setting_system_scrollbars_ui: Använd systemets standardrullningsfält
         setting_theme: Sidans tema
@@ -272,6 +275,7 @@ sv:
         setting_use_pending_items: Långsamt läge
         severity: Strikthet
         sign_in_token_attempt: Säkerhetskod
+        sign_in_token_resend: Skicka säkerhetskoden igen
         title: Rubrik
         type: Importtyp
         username: Användarnamn

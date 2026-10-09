@@ -256,12 +256,15 @@ zh-CN:
         setting_display_media_default: 默认
         setting_display_media_hide_all: 隐藏全部
         setting_display_media_show_all: 显示全部
+        setting_display_own_boosts: 在我的主动态内显示自己的转嘟
+        setting_display_own_posts: 在我的主动态内显示自己的嘟文
         setting_emoji_style: 表情符号样式
         setting_expand_spoilers: 一律展开具有内容警告的嘟文
         setting_hide_network: 隐藏你的社交网络
         setting_missing_alt_text_modal: 发送没有设置替代文本的媒体内容前警告我
         setting_quick_boosting: 启用快速转嘟
         setting_reduce_motion: 降低过渡动画效果
+        setting_split_default_privacy_discoverable: 让我的嘟文可在公开动态及搜索结果中发现
         setting_system_font_ui: 使用系统默认字体
         setting_system_scrollbars_ui: 使用系统默认样式的滚动条
         setting_theme: 站点主题
@@ -271,6 +274,7 @@ zh-CN:
         setting_use_pending_items: 慢速模式
         severity: 级别
         sign_in_token_attempt: 安全码
+        sign_in_token_resend: 重新发送安全码
         title: 标题
         type: 导入数据类型
         username: 用户名

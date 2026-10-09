@@ -256,12 +256,15 @@ vi:
         setting_display_media_default: Mặc định
         setting_display_media_hide_all: Ẩn toàn bộ
         setting_display_media_show_all: Hiện toàn bộ
+        setting_display_own_boosts: Hiện tút tôi đăng lại trong bảng tin chính của tôi
+        setting_display_own_posts: Hiện tút của tôi trong bảng tin chính của tôi
         setting_emoji_style: Phong cách Emoji
         setting_expand_spoilers: Luôn mở rộng nội dung ẩn
         setting_hide_network: Ẩn quan hệ của bạn
         setting_missing_alt_text_modal: Hỏi trước khi đăng phương tiện mà không có văn bản thay thế
         setting_quick_boosting: Đăng lại nhanh
         setting_reduce_motion: Giảm chuyển động ảnh GIF
+        setting_split_default_privacy_discoverable: Cho phép tìm thấy trong các nguồn tin công khai & kết quả tìm kiếm
         setting_system_font_ui: Phông chữ mặc định hệ thống
         setting_system_scrollbars_ui: Thanh cuộn mặc định hệ thống
         setting_theme: Giao diện
@@ -271,6 +274,7 @@ vi:
         setting_use_pending_items: Chế độ chậm
         severity: Mức độ nghiêm trọng
         sign_in_token_attempt: Mã an toàn
+        sign_in_token_resend: Gửi lại mã bảo mật
         title: Tựa đề
         type: Kiểu nhập
         username: Tên người dùng
