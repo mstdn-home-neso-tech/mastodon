@@ -260,12 +260,15 @@ ga:
         setting_display_media_default: Réamhshocrú
         setting_display_media_hide_all: Cuir uile i bhfolach
         setting_display_media_show_all: Taispeáin uile
+        setting_display_own_boosts: Taispeáin mo chuid athroinnte féin i mo phríomh-fhotha
+        setting_display_own_posts: Taispeáin mo chuid postálacha féin i mo phríomhfhed
         setting_emoji_style: Stíl Emoji
         setting_expand_spoilers: Méadaigh postálacha atá marcáilte le rabhaidh inneachair i gcónaí
         setting_hide_network: Folaigh do ghraf sóisialta
         setting_missing_alt_text_modal: Tabhair rabhadh dom sula bpostálann tú meáin gan téacs malartach
         setting_quick_boosting: Cumasaigh borradh tapa
         setting_reduce_motion: Laghdú ar an tairiscint i beochan
+        setting_split_default_privacy_discoverable: Déan mo chuid postálacha in-aimsithe sa bhfuilseán poiblí agus i dtorthaí cuardaigh
         setting_system_font_ui: Úsáid cló réamhshocraithe an chórais
         setting_system_scrollbars_ui: Bain úsáid as scrollbharra réamhshocraithe an chórais
         setting_theme: Téama suímh
@@ -275,6 +278,7 @@ ga:
         setting_use_pending_items: Modh mall
         severity: Déine
         sign_in_token_attempt: Cód slándála
+        sign_in_token_resend: Athsheol an cód slándála
         title: Teideal
         type: Cineál iompórtála
         username: Ainm úsáideora
