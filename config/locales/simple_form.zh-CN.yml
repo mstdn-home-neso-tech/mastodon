@@ -61,6 +61,7 @@ zh-CN:
         setting_default_quote_policy_private: Mastodon上发布的仅限关注者可见的嘟文无法被他人引用。
         setting_default_quote_policy_unlisted: 当其他人引用你时，他们的嘟文也会从热门时间线上隐藏。
         setting_default_sensitive: 敏感内容默认隐藏，并在点击后显示
+        setting_default_spoiler_field: 在编辑器内将内容警告栏位保持为打开状态。你可以根据每条嘟文自定义内容警告文本。
         setting_display_media_default: 显示被标记为敏感内容的媒体前显示警告
         setting_display_media_hide_all: 显示所有媒体前都显示警告
         setting_display_media_show_all: 显示所有媒体而不显示警告，包括被标记为敏感内容的媒体
@@ -249,6 +250,7 @@ zh-CN:
         setting_default_privacy: 嘟文可见性
         setting_default_quote_policy: 谁可以引用
         setting_default_sensitive: 始终标记媒体为敏感内容
+        setting_default_spoiler_field: 默认使用内容警告
         setting_delete_modal: 删除嘟文前警告我
         setting_disable_hover_cards: 禁用悬停资料预览
         setting_disable_swiping: 禁用滑动动作
@@ -256,12 +258,15 @@ zh-CN:
         setting_display_media_default: 默认
         setting_display_media_hide_all: 隐藏全部
         setting_display_media_show_all: 显示全部
+        setting_display_own_boosts: 在我的主动态内显示自己的转嘟
+        setting_display_own_posts: 在我的主动态内显示自己的嘟文
         setting_emoji_style: 表情符号样式
         setting_expand_spoilers: 一律展开具有内容警告的嘟文
         setting_hide_network: 隐藏你的社交网络
         setting_missing_alt_text_modal: 发送没有设置替代文本的媒体内容前警告我
         setting_quick_boosting: 启用快速转嘟
         setting_reduce_motion: 降低过渡动画效果
+        setting_split_default_privacy_discoverable: 让我的嘟文可在公开动态及搜索结果中发现
         setting_system_font_ui: 使用系统默认字体
         setting_system_scrollbars_ui: 使用系统默认样式的滚动条
         setting_theme: 站点主题
@@ -271,6 +276,7 @@ zh-CN:
         setting_use_pending_items: 慢速模式
         severity: 级别
         sign_in_token_attempt: 安全码
+        sign_in_token_resend: 重新发送安全码
         title: 标题
         type: 导入数据类型
         username: 用户名
@@ -349,6 +355,7 @@ zh-CN:
         follow: 有人关注了我
         follow_request: 有人向我发送了关注请求
         mention: 有人提到了我
+        moderation_suggestions: 自动管理建议可用
         pending_account: 有账号需要审核
         quote: 有人引用了我的嘟文
         reblog: 有人转嘟了我的嘟文

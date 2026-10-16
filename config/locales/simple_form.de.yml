@@ -61,6 +61,7 @@ de:
         setting_default_quote_policy_private: Beiträge, die nur für deine Follower bestimmt sind und auf Mastodon verfasst wurden, können nicht von anderen zitiert werden.
         setting_default_quote_policy_unlisted: Sollten dich andere zitieren, werden ihre zitierten Beiträge ebenfalls nicht in den Trends und öffentlichen Timelines angezeigt.
         setting_default_sensitive: Medien, die mit einer Inhaltswarnung versehen worden sind, werden – je nach Einstellung – erst nach einem zusätzlichen Klick angezeigt
+        setting_default_spoiler_field: Dadurch wird die Inhaltswarnung beim Verfassen von Beiträgen immer aktiviert. Der Warnhinweis kann bei jedem Beitrag individuell angepasst werden.
         setting_display_media_default: Vor der Anzeige von Medien, die eine Inhaltswarnung enthalten, hinweisen
         setting_display_media_hide_all: Vor der Anzeige von allen Medien hinweisen
         setting_display_media_show_all: Alle Medien anzeigen – auch Medien, die eine Inhaltswarnung enthalten
@@ -175,7 +176,7 @@ de:
       webhook:
         events: Zu sendende Ereignisse auswählen
         template: Erstelle deine eigenen JSON-Nutzdaten mit Hilfe von Variablen-Interpolation. Leer lassen für Standard-JSON.
-        url: Wohin Ereignisse gesendet werden
+        url: Wohin Ereignisse geschickt werden
     labels:
       account:
         attribution_domains: Websites, die auf dich verweisen dürfen
@@ -250,6 +251,7 @@ de:
         setting_default_privacy: Beitragssichtbarkeit
         setting_default_quote_policy: Wer darf mich zitieren?
         setting_default_sensitive: Medien immer mit einer Inhaltswarnung versehen
+        setting_default_spoiler_field: Inhaltswarnung standardmäßig aktivieren
         setting_delete_modal: Löschen von Beiträgen gesondert bestätigen
         setting_disable_hover_cards: Profilvorschau deaktivieren, wenn die Maus über das Profil bewegt wird
         setting_disable_swiping: Wischgesten deaktivieren
@@ -257,12 +259,15 @@ de:
         setting_display_media_default: Standard
         setting_display_media_hide_all: Alle Medien ausblenden
         setting_display_media_show_all: Alle Medien anzeigen
+        setting_display_own_boosts: Von mir geteilte Beiträge auf meiner Startseite zeigen
+        setting_display_own_posts: Eigene Beiträge auf meiner Startseite anzeigen
         setting_emoji_style: Emoji-Stil
         setting_expand_spoilers: Beiträge mit Inhaltswarnung immer ausklappen
         setting_hide_network: Follower und „Folge ich“ nicht anzeigen
         setting_missing_alt_text_modal: An die Bildbeschreibung erinnern, falls sie fehlen sollte
         setting_quick_boosting: Schnelles Teilen aktivieren
         setting_reduce_motion: Bewegung in Animationen verringern
+        setting_split_default_privacy_discoverable: Meine Beiträge dürfen in öffentlichen Feeds und Suchergebnissen sichtbar sein
         setting_system_font_ui: Standardschriftart des Browsers verwenden
         setting_system_scrollbars_ui: Bildlaufleiste des Betriebssystems verwenden
         setting_theme: Design
@@ -272,6 +277,7 @@ de:
         setting_use_pending_items: Langsamer Modus
         severity: Einschränkung
         sign_in_token_attempt: Sicherheitscode
+        sign_in_token_resend: Sicherheitscode erneut senden
         title: Titel
         type: Typ
         username: Profilname
@@ -324,7 +330,7 @@ de:
         trends: Trends aktivieren
         wrapstodon: Wrapstodon aktivieren
       form_email_subscriptions_confirmation:
-        agreement_email_volume: Ich verstehe, dass das Aktivieren dieser Funktion die Anzahl versendeter E-Mails drastisch erhöhen kann. Ich übernehme die Verantwortung für mögliche Zusatzkosten.
+        agreement_email_volume: Ich verstehe, dass das Aktivieren dieser Funktion die Anzahl verschickter E-Mails drastisch erhöhen kann. Ich übernehme die Verantwortung für mögliche Zusatzkosten.
         agreement_privacy_and_terms: Datenschutzerklärung und Nutzungsbedingungen wurden im Vorfeld aktualisiert.
       interactions:
         must_be_follower: Benachrichtigungen von Profilen, die mir nicht folgen, ausblenden
