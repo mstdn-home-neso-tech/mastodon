@@ -1,6 +1,6 @@
 import { defineMessages } from 'react-intl';
 
-import axios from 'axios';
+import { isCancel } from 'axios';
 import { throttle } from 'lodash';
 
 import api from '@/mastodon/api';
@@ -10,6 +10,7 @@ import { tagHistory } from '@/mastodon/settings';
 import { emojiMartSearch } from '@/mastodon/features/emoji/picker';
 
 import { showAlert, showAlertForError } from './alerts';
+import { isStandaloneComposePath } from './compose_path';
 import { emojiUse } from './emojis';
 import { importFetchedAccounts, importFetchedStatus } from './importer';
 import { openModal } from './modal';
@@ -90,6 +91,8 @@ const messages = defineMessages({
   published: { id: 'compose.published.body', defaultMessage: 'Post published.' },
   saved: { id: 'compose.saved.body', defaultMessage: 'Post saved.' },
   blankPostError: { id: 'compose.error.blank_post', defaultMessage: 'Post can\'t be blank.' },
+  messagePublished: { id: 'compose.message.published.body', defaultMessage: 'Message sent' },
+  messageSaved: { id: 'compose.message.saved.body', defaultMessage: 'Message saved' },
 });
 
 export const ensureComposeIsVisible = (getState) => {
@@ -132,18 +135,6 @@ export function replyCompose(status) {
       const text = getState().getIn(['compose', 'text'], '');
       // Preselect any mentions past the first, mirroring the reply text's leading `@user `.
       dispatch(requestComposerFocus({ start: text.search(/\s/) + 1, end: text.length }));
-    }
-  };
-}
-
-export function replyComposeById(statusId) {
-  return (dispatch, getState) => {
-    const state = getState();
-    const status = state.statuses.get(statusId);
-
-    if (status) {
-      const account = state.accounts.get(status.get('account'));
-      dispatch(replyCompose(status.set('account', account)));
     }
   };
 }
@@ -276,7 +267,7 @@ export function submitCompose(successCallback) {
         'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),
       },
     }).then(function (response) {
-      if ((browserHistory.location.pathname === '/publish' || browserHistory.location.pathname === '/statuses/new') && window.history.state) {
+      if (isStandaloneComposePath(browserHistory.location.pathname) && window.history.state) {
         browserHistory.goBack();
       }
 
@@ -310,10 +301,15 @@ export function submitCompose(successCallback) {
         insertIfOnline(`account:${response.data.account.id}`);
       }
 
-      dispatch(insertStatusIntoAccountTimelines({ ...response.data }))
+      dispatch(insertStatusIntoAccountTimelines({ ...response.data }));
+
+      let message = statusId === null ? messages.published : messages.saved;
+      if (isRedesignEnabled() && response.data.visibility === 'direct') {
+        message = statusId === null ? messages.messagePublished : messages.messageSaved;
+      }
 
       dispatch(showAlert({
-        message: statusId === null ? messages.published : messages.saved,
+        message,
         action: messages.open,
         dismissAfter: 10000,
         onClick: () => browserHistory.push(
@@ -560,7 +556,7 @@ const fetchComposeSuggestionsAccounts = throttle((dispatch, token) => {
     dispatch(importFetchedAccounts(response.data));
     dispatch(readyComposeSuggestionsAccounts(token, response.data));
   }).catch(error => {
-    if (!axios.isCancel(error)) {
+    if (!isCancel(error)) {
       dispatch(showAlertForError(error));
     }
   }).finally(() => {
@@ -610,7 +606,7 @@ const fetchComposeSuggestionsTags = throttle((dispatch, token) => {
   }).then(({ data }) => {
     dispatch(readyComposeSuggestionsTags(token, data.hashtags));
   }).catch(error => {
-    if (!axios.isCancel(error)) {
+    if (!isCancel(error)) {
       dispatch(showAlertForError(error));
     }
   }).finally(() => {
