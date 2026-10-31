@@ -4,20 +4,6 @@ class FetchLinkCardService < BaseService
   include Redisable
   include Lockable
 
-  URL_PATTERN = %r{
-    (#{Twitter::TwitterText::Regex[:valid_url_preceding_chars]})                                                                #   $1 preceding chars
-    (                                                                                                                           #   $2 URL
-      (https?://)                                                                                                               #   $3 Protocol (required)
-      (#{Twitter::TwitterText::Regex[:valid_domain]})                                                                           #   $4 Domain(s)
-      (?::(#{Twitter::TwitterText::Regex[:valid_port_number]}))?                                                                #   $5 Port number (optional)
-      (/#{Twitter::TwitterText::Regex[:valid_url_path]}*)?                                                                      #   $6 URL Path and anchor
-      (\?#{Twitter::TwitterText::Regex[:valid_url_query_chars]}*#{Twitter::TwitterText::Regex[:valid_url_query_ending_chars]})? #   $7 Query String
-    )
-  }iox
-
-  # URL size limit to safely store in PosgreSQL's unique indexes
-  BYTESIZE_LIMIT = 2692
-
   def call(status, original_url = nil)
     @status       = status
     @original_url = original_url || parse_urls
@@ -81,7 +67,12 @@ class FetchLinkCardService < BaseService
 
   def parse_urls
     urls = if @status.local?
-             @status.text.scan(URL_PATTERN).map { |array| Addressable::URI.parse(array[1]).normalize }
+             # extract_entities_with_indices runs the URL match alongside
+             # the mention match and resolves overlap, so something like
+             # "@bob@example.com" yields a mention, not a URL.
+             Extractor.extract_entities_with_indices(@status.text).filter_map do |entity|
+               Addressable::URI.parse(entity[:url]).normalize if entity[:url]
+             end
            else
              document = Nokogiri::HTML5(@status.text)
              links = document.css('a')
@@ -94,7 +85,7 @@ class FetchLinkCardService < BaseService
 
   def bad_url?(uri)
     # Avoid local instance URLs and invalid URLs
-    uri.host.blank? || TagManager.instance.local_url?(uri.to_s) || !%w(http https).include?(uri.scheme) || uri.to_s.bytesize > BYTESIZE_LIMIT
+    uri.host.blank? || TagManager.instance.local_url?(uri.to_s) || !%w(http https).include?(uri.scheme)
   end
 
   def mention_link?(anchor)
