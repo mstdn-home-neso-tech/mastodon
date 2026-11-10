@@ -2,7 +2,7 @@ import type React from 'react';
 
 import classNames from 'classnames';
 
-import { Button } from '../button/redesign';
+import { Button } from '../button';
 import { Icon } from '../icon';
 import type { IconProp } from '../icon';
 
@@ -13,9 +13,11 @@ type RenameKeysStartingWith<
   TPrefix extends string,
   TReplacement extends string,
 > = {
-  [TKey in keyof TObject as TKey extends `${TPrefix}${infer TSuffix}`
-    ? `${TReplacement}${TSuffix}`
-    : TKey]: TObject[TKey];
+  [
+    TKey in keyof TObject as TKey extends `${TPrefix}${infer TSuffix}`
+      ? `${TReplacement}${TSuffix}`
+      : TKey
+  ]: TObject[TKey];
 };
 
 type ActionProps =
