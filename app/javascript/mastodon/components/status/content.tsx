@@ -1,4 +1,3 @@
-import type React from 'react';
 import { useCallback, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
@@ -7,22 +6,23 @@ import classNames from 'classnames';
 
 import { CaretRightIcon } from '@phosphor-icons/react';
 
+import { VERTICAL_LANG_CODES } from '@/mastodon/locales';
 import type {
   ExpandedStatusShape,
   StatusShape,
 } from '@/mastodon/models/status';
 
-import { Button } from '../button/redesign';
+import { Button } from '../button';
 import { EmojiHTML } from '../emoji/html';
 
+import classes from './content.module.scss';
 import { useHandlersForStatus } from './hooks';
-import classes from './styles.module.scss';
 
-const MAX_HEIGHT = 706; // 22px * 32 (+ 2px padding at the top)
+const MAX_LINES = 35;
 
 export const StatusContent: React.FC<
   {
-    status: StatusShape | ExpandedStatusShape;
+    status: Omit<StatusShape | ExpandedStatusShape, 'reblog'>;
     statusContent?: string;
     onTranslate?: () => void;
     onReadMore?: () => void;
@@ -38,6 +38,10 @@ export const StatusContent: React.FC<
   className,
   ...props
 }) => {
+  const text =
+    statusContent ?? status.translation?.contentHtml ?? status.contentHtml;
+  const language = status.translation?.language ?? status.language;
+
   // Determines if a long post should show the read more button.
   const [collapsed, setCollapsed] = useState(false);
   const onRef = useCallback(
@@ -47,55 +51,70 @@ export const StatusContent: React.FC<
       }
 
       setCollapsed(
-        (node.clientHeight > MAX_HEIGHT ||
-          node.scrollWidth > node.clientWidth) &&
-          !status.spoiler_text,
+        isElementOverflowing(node, VERTICAL_LANG_CODES.includes(language)),
       );
     },
-    [collapsed, status.spoiler_text],
+    [collapsed, language],
   );
 
   const htmlHandlers = useHandlersForStatus(status);
 
-  const language = status.translation?.language ?? status.language;
-
   const isCollapsed = !!onReadMore && collapsible && collapsed;
 
-  return (
-    <div
-      {...props}
-      className={classNames(
-        className,
-        classes.content,
-        isCollapsed && classes.collapsed,
-      )}
-      ref={onRef}
-    >
-      <EmojiHTML
-        className={classes.contentText}
-        ref={onRef}
-        lang={language}
-        htmlString={
-          statusContent ?? status.translation?.contentHtml ?? status.contentHtml
-        }
-        extraEmojis={status.emojis}
-        {...htmlHandlers}
-      />
+  const style = {
+    '--max-height': `${MAX_LINES}lh`,
+    ...props.style,
+  } as React.CSSProperties;
 
-      {children}
+  return (
+    <>
+      <div
+        {...props}
+        className={classNames(
+          className,
+          classes.root,
+          isCollapsed && classes.collapsed,
+        )}
+        ref={onRef}
+        style={style}
+      >
+        {text.trim().length > 0 && (
+          <EmojiHTML
+            className={classes.text}
+            lang={language}
+            htmlString={text}
+            extraEmojis={status.emojis}
+            {...htmlHandlers}
+          />
+        )}
+
+        {children}
+      </div>
 
       {isCollapsed && (
         <Button
           size='sm'
-          clipPadding
-          variant='ghost'
           onClick={onReadMore}
           trailingIcon={CaretRightIcon}
-          className={classes.contentReadMore}
+          className={classes.readMore}
         >
-          <FormattedMessage id='status.read_more' defaultMessage='Read more' />
+          <FormattedMessage
+            id='status.view_post'
+            defaultMessage='View full post'
+          />
         </Button>
       )}
-    </div>
+    </>
   );
 };
+
+function isElementOverflowing(node: Element, checkHorizontal = true) {
+  const { lineHeight } = getComputedStyle(node);
+  const lineHeightPx = parseFloat(lineHeight);
+  const maxHeight = lineHeightPx * MAX_LINES;
+
+  return (
+    node.clientHeight > maxHeight ||
+    (checkHorizontal && Math.abs(node.scrollWidth - node.clientWidth) > 1)
+  );
+}
