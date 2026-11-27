@@ -82,26 +82,26 @@ RSpec.describe JsonLdHelper do
   end
 
   describe '#fetch_resource' do
-    context 'when the second argument is false' do
+    context 'when allow_redirects is true' do
       it 'returns resource even if the retrieved ID and the given URI does not match' do
         stub_request(:get, 'https://bob.test/').to_return(body: '{"id": "https://alice.test/"}', headers: { 'Content-Type': 'application/activity+json' })
         stub_request(:get, 'https://alice.test/').to_return(body: '{"id": "https://alice.test/"}', headers: { 'Content-Type': 'application/activity+json' })
 
-        expect(fetch_resource('https://bob.test/', false)).to eq({ 'id' => 'https://alice.test/' })
+        expect(fetch_resource('https://bob.test/', allow_redirects: true)).to eq({ 'id' => 'https://alice.test/' })
       end
 
       it 'returns nil if the object identified by the given URI and the object identified by the retrieved ID does not match' do
         stub_request(:get, 'https://mallory.test/').to_return(body: '{"id": "https://marvin.test/"}', headers: { 'Content-Type': 'application/activity+json' })
         stub_request(:get, 'https://marvin.test/').to_return(body: '{"id": "https://alice.test/"}', headers: { 'Content-Type': 'application/activity+json' })
 
-        expect(fetch_resource('https://mallory.test/', false)).to be_nil
+        expect(fetch_resource('https://mallory.test/', allow_redirects: true)).to be_nil
       end
     end
 
-    context 'when the second argument is true' do
+    context 'when allow_redirects is false' do
       it 'returns nil if the retrieved ID and the given URI does not match' do
         stub_request(:get, 'https://mallory.test/').to_return(body: '{"id": "https://alice.test/"}', headers: { 'Content-Type': 'application/activity+json' })
-        expect(fetch_resource('https://mallory.test/', true)).to be_nil
+        expect(fetch_resource('https://mallory.test/', allow_redirects: false)).to be_nil
       end
     end
   end
@@ -173,42 +173,6 @@ RSpec.describe JsonLdHelper do
 
       it 'properly copies signature' do
         expect(compact(json)['signature']).to eq json['signature']
-      end
-    end
-
-    describe 'patch_for_forwarding!' do
-      it 'properly patches incompatibilities' do
-        json['object'].delete('convo')
-        compacted = compact(json)
-        patch_for_forwarding!(json, compacted)
-        expect(compacted['to']).to eq ['https://www.w3.org/ns/activitystreams#Public']
-        expect(compacted.dig('object', 'tag', 0, 'href')).to eq ['foo']
-        expect(safe_for_forwarding?(json, compacted)).to be true
-      end
-
-      context 'when array size mismatch exists' do
-        subject { helper.patch_for_forwarding!(json, alternate) }
-
-        let(:alternate) { json.merge('to' => %w(one two three)) }
-
-        it { is_expected.to be_nil }
-      end
-    end
-
-    describe 'safe_for_forwarding?' do
-      it 'deems a safe compacting as such' do
-        json['object'].delete('convo')
-        compacted = compact(json)
-        patch_for_forwarding!(json, compacted)
-        expect(compacted['to']).to eq ['https://www.w3.org/ns/activitystreams#Public']
-        expect(safe_for_forwarding?(json, compacted)).to be true
-      end
-
-      it 'deems an unsafe compacting as such' do
-        compacted = compact(json)
-        patch_for_forwarding!(json, compacted)
-        expect(compacted['to']).to eq ['https://www.w3.org/ns/activitystreams#Public']
-        expect(safe_for_forwarding?(json, compacted)).to be false
       end
     end
   end

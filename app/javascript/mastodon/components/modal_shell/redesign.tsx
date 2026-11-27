@@ -8,7 +8,7 @@ import { XIcon } from '@phosphor-icons/react';
 
 import type { PolymorphicProps } from '@/types/polymorphic';
 
-import { IconButton } from '../button/redesign';
+import { IconButton } from '../button';
 import type { NamedFocusTarget } from '../navigation_focus_target';
 import { NavigationFocusTarget } from '../navigation_focus_target';
 
@@ -38,6 +38,7 @@ export const ModalShell = <As extends React.ElementType>({
       className={classNames(
         className,
         classes.modal,
+        maxWidth && classes.modalMaxWidth,
         elevation === 2 && classes.modalElevated,
       )}
       style={{
@@ -83,10 +84,10 @@ export const ModalTitle: React.FC<
     );
   }
 
-  if (onClose) {
-    return (
-      <header className={classes.titleWrapper}>
-        {title}
+  return (
+    <header className={classes.titleWrapper}>
+      {title}
+      {onClose && (
         <IconButton
           variant='ghost'
           icon={XIcon}
@@ -95,11 +96,31 @@ export const ModalTitle: React.FC<
         >
           <FormattedMessage id='lightbox.close' defaultMessage='Close' />
         </IconButton>
-      </header>
-    );
-  }
+      )}
+    </header>
+  );
+};
 
-  return title;
+export const ModalBody = <As extends React.ElementType = 'div'>({
+  align,
+  as: asComp,
+  children,
+  className,
+  ...props
+}: PolymorphicProps<
+  {
+    children?: React.ReactNode;
+    className?: string;
+  },
+  As
+>) => {
+  const Comp = asComp ?? 'div';
+
+  return (
+    <Comp {...props} className={classNames(className, classes.body)}>
+      {children}
+    </Comp>
+  );
 };
 
 export const ModalActions = <As extends React.ElementType = 'div'>({

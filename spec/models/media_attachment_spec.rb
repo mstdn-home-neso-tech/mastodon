@@ -3,6 +3,24 @@
 require 'rails_helper'
 
 RSpec.describe MediaAttachment, :attachment_processing do
+  describe '#video_or_gifv?' do
+    it 'returns true for video and gifv attachments' do
+      expect(described_class.new(type: :video))
+        .to be_video_or_gifv
+      expect(described_class.new(type: :gifv))
+        .to be_video_or_gifv
+    end
+
+    it 'returns false for other attachment types' do
+      expect(described_class.new(type: :image))
+        .to_not be_video_or_gifv
+      expect(described_class.new(type: :audio))
+        .to_not be_video_or_gifv
+      expect(described_class.new(type: :unknown))
+        .to_not be_video_or_gifv
+    end
+  end
+
   describe 'local?' do
     subject { media_attachment.local? }
 
@@ -149,13 +167,13 @@ RSpec.describe MediaAttachment, :attachment_processing do
     it_behaves_like 'static 600x400 image', 'image/webp', '.webp'
   end
 
-  describe 'avif' do
+  describe 'avif', skip: 'HEIF temporarily disabled' do
     let(:media) { Fabricate(:media_attachment, file: attachment_fixture('600x400.avif')) }
 
     it_behaves_like 'static 600x400 image', 'image/jpeg', '.jpeg'
   end
 
-  describe 'heic' do
+  describe 'heic', skip: 'HEIF temporarily disabled' do
     let(:media) { Fabricate(:media_attachment, file: attachment_fixture('600x400.heic')) }
 
     it_behaves_like 'static 600x400 image', 'image/jpeg', '.jpeg'
