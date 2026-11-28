@@ -79,6 +79,63 @@ RSpec.describe ActivityPub::ProcessAccountService do
     end
   end
 
+  context 'with a single property value not wrapped in an array' do
+    let(:payload) do
+      {
+        id: 'https://foo.test',
+        type: 'Actor',
+        inbox: 'https://foo.test/inbox',
+        preferredUsername: 'alice',
+        attachment: { type: 'PropertyValue', name: 'Pronouns', value: 'They/them' },
+      }.deep_stringify_keys
+    end
+
+    before { stub_webfinger! }
+
+    it 'parses the property value' do
+      account = subject.call(payload)
+
+      expect(account.fields)
+        .to contain_exactly(have_attributes(name: 'Pronouns', value: 'They/them'))
+    end
+
+    context 'when the account was known with several fields' do
+      let!(:alice) { Fabricate(:account, uri: 'https://foo.test', domain: 'foo.test', username: 'alice', fields: [{ 'name' => 'Pronouns', 'value' => 'They/them' }, { 'name' => 'Occupation', 'value' => 'Unit test' }]) }
+
+      it 'keeps the remaining field' do
+        subject.call(payload)
+
+        expect(alice.reload.fields)
+          .to contain_exactly(have_attributes(name: 'Pronouns', value: 'They/them'))
+      end
+    end
+  end
+
+  context 'with malformed attachments' do
+    let(:payload) do
+      {
+        id: 'https://foo.test',
+        type: 'Actor',
+        inbox: 'https://foo.test/inbox',
+        preferredUsername: 'alice',
+        attachment: [
+          'https://foo.test/attachment',
+          42,
+          { type: 'PropertyValue', name: 'Pronouns', value: 'They/them' },
+        ],
+      }.deep_stringify_keys
+    end
+
+    before { stub_webfinger! }
+
+    it 'skips the malformed entries' do
+      account = subject.call(payload)
+
+      expect(account.fields)
+        .to contain_exactly(have_attributes(name: 'Pronouns', value: 'They/them'))
+    end
+  end
+
   context 'with collection URIs' do
     let(:payload) do
       {
@@ -744,29 +801,23 @@ RSpec.describe ActivityPub::ProcessAccountService do
     context 'when locally' do
       let(:suspension_origin) { :local }
 
-      it 'does not unsuspend it' do
-        expect(subject.suspended?).to be true
-      end
-
-      it 'does not update any attributes' do
-        expect(subject.display_name).to_not eq 'Hoge'
+      it 'does not update attributes or unsuspend' do
+        expect(subject)
+          .to be_suspended
+          .and have_attributes(display_name: not_eq('Hoge'))
       end
     end
 
     context 'when remotely' do
       let(:suspension_origin) { :remote }
 
-      it 'unsuspends it' do
-        expect(subject.suspended?).to be false
-      end
-
-      it 'queues unsuspension worker' do
-        subject
-        expect(Admin::UnsuspensionWorker).to have_received(:perform_async)
-      end
-
-      it 'updates attributes' do
-        expect(subject.display_name).to eq 'Hoge'
+      it 'updates attributes and unsuspends it and queues worker', :aggregate_failures do
+        expect(subject)
+          .to_not be_suspended
+        expect(subject)
+          .to have_attributes(display_name: 'Hoge')
+        expect(Admin::UnsuspensionWorker)
+          .to have_received(:perform_async)
       end
     end
   end
