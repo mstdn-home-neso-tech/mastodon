@@ -162,93 +162,21 @@ module JsonLdHelper
     end
   end
 
-  # Patches a JSON-LD document to avoid compatibility issues on redistribution
-  #
-  # Since compacting a JSON-LD document against Mastodon's built-in vocabulary
-  # means other extension namespaces will be expanded, malformed JSON-LD
-  # attributes lost, and some values “unexpectedly” compacted this method
-  # patches the following likely sources of incompatibility:
-  # - 'https://www.w3.org/ns/activitystreams#Public' being compacted to
-  #   'as:Public' (for instance, pre-3.4.0 Mastodon does not understand
-  #   'as:Public')
-  # - single-item arrays being compacted to the item itself (`[foo]` being
-  #   compacted to `foo`)
-  #
-  # It is not always possible for `patch_for_forwarding!` to produce a document
-  # deemed safe for forwarding. Use `safe_for_forwarding?` to check the status
-  # of the output document.
-  #
-  # @param original [Hash] The original JSON-LD document used as reference
-  # @param compacted [Hash] The compacted JSON-LD document to be patched
-  # @return [void]
-  def patch_for_forwarding!(original, compacted)
-    original.without('@context', 'signature').each do |key, value|
-      next if value.nil? || !compacted.key?(key)
-
-      compacted_value = compacted[key]
-      if value.is_a?(Hash) && compacted_value.is_a?(Hash)
-        patch_for_forwarding!(value, compacted_value)
-      elsif value.is_a?(Array)
-        compacted_value = [compacted_value] unless compacted_value.is_a?(Array)
-        return nil if value.size != compacted_value.size
-
-        compacted[key] = value.zip(compacted_value).map do |v, vc|
-          if v.is_a?(Hash) && vc.is_a?(Hash)
-            patch_for_forwarding!(v, vc)
-            vc
-          elsif v == 'https://www.w3.org/ns/activitystreams#Public' && vc == 'as:Public'
-            v
-          else
-            vc
-          end
-        end
-      elsif value == 'https://www.w3.org/ns/activitystreams#Public' && compacted_value == 'as:Public'
-        compacted[key] = value
-      end
-    end
-  end
-
-  # Tests whether a JSON-LD compaction is deemed safe for redistribution,
-  # that is, if it doesn't change its meaning to consumers that do not actually
-  # handle JSON-LD, but rely on values being serialized in a certain way.
-  #
-  # See `patch_for_forwarding!` for details.
-  #
-  # @param original [Hash] The original JSON-LD document used as reference
-  # @param compacted [Hash] The compacted JSON-LD document to be patched
-  # @return [Boolean] Whether the patched document is deemed safe
-  def safe_for_forwarding?(original, compacted)
-    original.without('@context', 'signature').all? do |key, value|
-      compacted_value = compacted[key]
-      return false unless value.instance_of?(compacted_value.class)
-
-      if value.is_a?(Hash)
-        safe_for_forwarding?(value, compacted_value)
-      elsif value.is_a?(Array)
-        value.zip(compacted_value).all? do |v, vc|
-          v.is_a?(Hash) ? (vc.is_a?(Hash) && safe_for_forwarding?(v, vc)) : v == vc
-        end
-      else
-        value == compacted_value
-      end
-    end
-  end
-
   # Fetch the resource given by uri.
   # @param uri [String]
-  # @param id_is_known [Boolean]
+  # @param allow_redirects [Boolean]
   # @param on_behalf_of [nil, Account]
   # @param raise_on_error [Symbol<:all, :temporary, :none>] See {#fetch_resource_without_id_validation} for possible values
-  def fetch_resource(uri, id_is_known, on_behalf_of = nil, raise_on_error: :none, request_options: {})
-    unless id_is_known
-      json = fetch_resource_without_id_validation(uri, on_behalf_of, raise_on_error: raise_on_error)
+  def fetch_resource(uri, allow_redirects: false, on_behalf_of: nil, raise_on_error: :none, request_options: {})
+    if allow_redirects
+      json = fetch_resource_without_id_validation(uri, on_behalf_of: on_behalf_of, raise_on_error: raise_on_error)
 
       return if !json.is_a?(Hash) || unsupported_uri_scheme?(json['id'])
 
       uri = json['id']
     end
 
-    json = fetch_resource_without_id_validation(uri, on_behalf_of, raise_on_error: raise_on_error, request_options: request_options)
+    json = fetch_resource_without_id_validation(uri, allow_redirects: false, on_behalf_of: on_behalf_of, raise_on_error: raise_on_error, request_options: request_options)
     json.present? && json['id'] == uri ? json : nil
   end
 
@@ -264,13 +192,16 @@ module JsonLdHelper
   #
   # @param uri [String]
   # @param on_behalf_of [nil, Account]
+  # @param allow_redirects [Boolean]
   # @param raise_on_error [Symbol<:all, :temporary, :none>]
   #   - +:all+ - raise if response code is not in the 2xx range
   #   - +:temporary+ - raise if the response code is not an "unsalvageable error" like a 404
   #     (see {#response_error_unsalvageable} )
   #   - +:none+ - do not raise, return +nil+
-  def fetch_resource_without_id_validation(uri, on_behalf_of = nil, raise_on_error: :none, request_options: {})
+  def fetch_resource_without_id_validation(uri, allow_redirects: true, on_behalf_of: nil, raise_on_error: :none, request_options: {})
     on_behalf_of ||= Account.representative
+
+    request_options = request_options.merge(follow: false) unless allow_redirects
 
     build_request(uri, on_behalf_of, options: request_options).perform do |response|
       raise Mastodon::UnexpectedResponseError, response if !response_successful?(response) && (
@@ -278,7 +209,7 @@ module JsonLdHelper
         (!response_error_unsalvageable?(response) && raise_on_error == :temporary)
       )
 
-      body_to_json(response.body_with_limit) if response.code == 200 && valid_activitypub_content_type?(response)
+      body_to_json(response.body_with_limit) if response.code == 200 && valid_activitypub_content_type?(response) && (allow_redirects || response.uri.to_s == uri)
     end
   end
 
@@ -345,7 +276,7 @@ module JsonLdHelper
     return collection_or_uri if collection_or_uri.is_a?(Hash)
     return if !reference_uri.nil? && non_matching_uri_hosts?(reference_uri, collection_or_uri)
 
-    fetch_resource_without_id_validation(collection_or_uri, on_behalf_of, raise_on_error: :temporary)
+    fetch_resource_without_id_validation(collection_or_uri, on_behalf_of: on_behalf_of, raise_on_error: :temporary)
   end
 
   def valid_activitypub_content_type?(response)

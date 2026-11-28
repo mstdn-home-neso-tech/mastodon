@@ -3,6 +3,85 @@
 require 'rails_helper'
 
 RSpec.describe 'Auth Registration' do
+  context 'when signed in' do
+    let(:current_password) { 'current password' }
+    let(:user) { Fabricate(:user, password: current_password) }
+
+    before { sign_in user }
+
+    it 'shows account settings with private cache headers' do
+      visit edit_user_registration_path
+
+      expect(page)
+        .to have_title(I18n.t('settings.account_settings'))
+        .and have_private_cache_control
+    end
+
+    it 'can update the user email' do
+      visit edit_user_registration_path
+
+      fill_in 'user_email', with: 'newemail@example.com'
+      fill_in 'user_current_password', with: current_password
+      expect { click_on submit_button }
+        .to change { user.reload.unconfirmed_email }.to('newemail@example.com')
+
+      expect(page)
+        .to have_current_path(edit_user_registration_path)
+        .and have_private_cache_control
+    end
+
+    it 'can update the user password' do
+      visit edit_user_registration_path
+
+      fill_in 'user_password', with: 'new password'
+      fill_in 'user_password_confirmation', with: 'new password'
+      fill_in 'user_current_password', with: current_password
+      expect { click_on submit_button }
+        .to(change { user.reload.encrypted_password })
+
+      expect(page)
+        .to have_current_path(edit_user_registration_path)
+    end
+  end
+
+  context 'with open registrations' do
+    let(:accept_language) { 'de' }
+
+    before do
+      Setting.registrations_mode = 'open'
+      page.driver.header('Accept-Language', accept_language)
+    end
+
+    around do |example|
+      I18n.with_locale(I18n.locale) do
+        example.run
+      end
+    end
+
+    it 'shows the sign-up form and creates a user using the requested language' do
+      visit new_user_registration_path
+      expect(page)
+        .to have_title(I18n.t('auth.register', locale: accept_language))
+
+      # Avoid the registration spam check
+      travel_to 10.seconds.from_now
+
+      fill_in 'user_account_attributes_username', with: 'test'
+      fill_in 'user_email', with: 'test@example.com'
+      fill_in 'user_password', with: 'Test.123.Pass'
+      fill_in 'user_password_confirmation', with: 'Test.123.Pass'
+      check 'user_agreement'
+
+      expect { click_on I18n.t('auth.register', locale: accept_language) }
+        .to change(User, :count).by(1)
+      expect(User.find_by(email: 'test@example.com'))
+        .to be_present
+        .and have_attributes(locale: eq(accept_language))
+      expect(page)
+        .to have_current_path(auth_setup_path)
+    end
+  end
+
   context 'when there are server rules' do
     let!(:rule) { Fabricate :rule, text: 'You must be seven meters tall' }
     let!(:rule_translation) { Fabricate :rule_translation, rule:, hint: 'Rule translation hint', text: rule.text }
@@ -40,8 +119,17 @@ RSpec.describe 'Auth Registration' do
     subject { visit new_user_registration_path }
 
     shared_examples 'approval is required' do
+      around do |example|
+        queue_adapter = ActiveJob::Base.queue_adapter
+        example.run
+        ActiveJob::Base.queue_adapter = queue_adapter
+      end
+
       context 'when reason to join is not required' do
-        before { Setting.require_invite_text = false }
+        before do
+          ActiveJob::Base.queue_adapter = :test
+          Setting.require_invite_text = false
+        end
 
         it 'asks for an optional reason to join, creates the user as unapproved' do
           subject
@@ -54,9 +142,13 @@ RSpec.describe 'Auth Registration' do
 
           expect { fill_in_and_submit_form(apply: true) }
             .to change(User, :count).by(1)
+            .and have_enqueued_job(ActionMailer::MailDeliveryJob)
 
           expect(User.find_by(email: 'test@example.com'))
             .to have_attributes(approved: false)
+
+          expect(page)
+            .to have_title(I18n.t('auth.setup.title'))
         end
       end
 
@@ -84,6 +176,34 @@ RSpec.describe 'Auth Registration' do
 
           expect(User.find_by(email: 'test@example.com'))
             .to have_attributes(approved: false)
+        end
+      end
+
+      context 'when confirmation e-mails are postponed' do
+        before do
+          ActiveJob::Base.queue_adapter = :test
+          Setting.require_invite_text = false
+          Setting.postpone_confirmation_emails = true
+        end
+
+        it 'asks for an optional reason to join, creates the user as unapproved, does not send a confirmation mail' do
+          subject
+
+          expect(page)
+            .to have_title(I18n.t('auth.register'))
+
+          expect(page)
+            .to have_text(I18n.t('simple_form.labels.invite_request.text'))
+
+          expect { fill_in_and_submit_form(apply: true) }
+            .to change(User, :count).by(1)
+            .and have_enqueued_job(ActionMailer::MailDeliveryJob).exactly(0).times
+
+          expect(User.find_by(email: 'test@example.com'))
+            .to have_attributes(approved: false, disabled: true, confirmation_sent_at: nil)
+
+          expect(page)
+            .to have_title(I18n.t('auth.setup.title_wait'))
         end
       end
     end
@@ -122,6 +242,7 @@ RSpec.describe 'Auth Registration' do
 
           expect { fill_in_and_submit_form(apply: false) }
             .to change(User, :count).by(1)
+            .and change { invite.reload.uses }.by(1)
 
           expect(User.find_by(email: 'test@example.com'))
             .to have_attributes(approved: true)

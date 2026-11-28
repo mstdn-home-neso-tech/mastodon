@@ -129,7 +129,7 @@ RSpec.describe ActivityPub::FetchRemoteStatusService do
 
         expect(status).to_not be_nil
         expect(status.url).to eq 'https://foo.bar/@foo/1234'
-        expect(strip_tags(status.text)).to eq "Let's change the world\n\nhttps://foo.bar/@foo/1234"
+        expect(strip_tags(status.text)).to eq "Let&#39;s change the world\n\nhttps://foo.bar/@foo/1234"
       end
     end
 
@@ -320,10 +320,10 @@ RSpec.describe ActivityPub::FetchRemoteStatusService do
       context 'with an implicit update to quoting policy' do
         let(:object) do
           note.merge({
-            'content' => existing_status.text,
-            'interactionPolicy' => {
-              'canQuote' => {
-                'automaticApproval' => ['https://www.w3.org/ns/activitystreams#Public'],
+            content: existing_status.text,
+            interactionPolicy: {
+              canQuote: {
+                automaticApproval: ['https://www.w3.org/ns/activitystreams#Public'],
               },
             },
           })
